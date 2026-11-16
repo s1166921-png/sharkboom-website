@@ -2,6 +2,12 @@
 
 import { useEffect, useRef, useState, type PointerEvent } from "react";
 import s from "./studio.module.css";
+import * as T from "three";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+import { WORLD_MODEL,WORLD_FALLBACK } from "./model-assets";
+import { fetchModel } from "./model-loader";
+import { WORLD_POSTER_DESKTOP,WORLD_POSTER_MOBILE } from "./poster-assets";
 
 type Props={playing:boolean;reducedMotion:boolean;active:number;resetKey:number;onExplore:()=>void};
 
@@ -16,10 +22,15 @@ export function SculptedWorld({playing,reducedMotion,active,resetKey,onExplore}:
   useEffect(()=>{
     const target=host.current;if(!target)return;
     let disposed=false,raf=0,visible=true,cleanup:(()=>void)|undefined;
+    const startedAt=performance.now(),abort=new AbortController();
+    // Begin the request immediately; HTML preload normally has already started it.
+    const modelBytes=fetchModel(WORLD_MODEL,WORLD_FALLBACK,abort.signal);
+    // Keep WASM decoding browser-only; do not initialize it in server rendering.
+    const decoderModule=import("meshoptimizer/decoder");void decoderModule.catch(()=>{});
+    void modelBytes.catch(()=>{});
     const visibility=new IntersectionObserver(([entry])=>{visible=entry.isIntersecting;},{rootMargin:"80px"});visibility.observe(target);
     async function boot(){
       try{
-        const [T,{GLTFLoader},{RoomEnvironment}]=await Promise.all([import("three"),import("three/addons/loaders/GLTFLoader.js"),import("three/addons/environments/RoomEnvironment.js")]);
         if(disposed)return;
         const renderer=new T.WebGLRenderer({alpha:true,antialias:true,powerPreference:"high-performance"});
         renderer.setPixelRatio(Math.min(devicePixelRatio||1,innerWidth<760?1.35:1.65));renderer.outputColorSpace=T.SRGBColorSpace;
@@ -34,10 +45,11 @@ export function SculptedWorld({playing,reducedMotion,active,resetKey,onExplore}:
         const rim=new T.DirectionalLight(0x6aaaff,3);rim.position.set(6,5,-7);scene.add(rim);
         const ground=new T.Mesh(new T.PlaneGeometry(40,40),new T.ShadowMaterial({opacity:.14}));ground.rotation.x=-Math.PI/2;ground.position.y=-.61;ground.receiveShadow=true;scene.add(ground);
         let world:import("three").Group|null=null,mixer:import("three").AnimationMixer|null=null;
-        let time=0,entrance=0,previous=0,seenReset=settings.current.resetKey,cameraYaw=.54,cameraPitch=.57,globeAngle=-2.2,flourishTime=0,needsRender=true;
+        let time=0,previous=0,seenReset=settings.current.resetKey,cameraYaw=.54,cameraPitch=.57,globeAngle=-2.2,flourishTime=0,needsRender=true;
         const waterUniform={value:0};
         const resources=new Set<import("three").BufferGeometry|import("three").Material>();
-        const model=await new GLTFLoader().loadAsync("/studio/sharkboom-world.glb");
+        const [buffer,{MeshoptDecoder}]=await Promise.all([modelBytes,decoderModule]);
+        const model=await new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).parseAsync(buffer,"");
         if(disposed){model.scene.traverse(o=>{const m=o as import("three").Mesh;m.geometry?.dispose();if(m.material)(Array.isArray(m.material)?m.material:[m.material]).forEach(mat=>mat.dispose());});renderer.dispose();environment.dispose();renderer.domElement.remove();return;}
         world=model.scene;scene.add(world);
         const shark=world.getObjectByName("SharkRig")!,vessel=world.getObjectByName("Vessel")!,globe=world.getObjectByName("Globe")!;
@@ -46,7 +58,7 @@ export function SculptedWorld({playing,reducedMotion,active,resetKey,onExplore}:
         water.castShadow=false;water.material.onBeforeCompile=shader=>{
           shader.uniforms.uStudioTime=waterUniform;
           shader.vertexShader="varying vec2 vOcean;\n"+shader.vertexShader;
-          shader.vertexShader=shader.vertexShader.replace("#include <begin_vertex>","#include <begin_vertex>\nvOcean=position.xy;");
+          shader.vertexShader=shader.vertexShader.replace("#include <begin_vertex>","#include <begin_vertex>\nvOcean=(modelMatrix*vec4(position,1.0)).xz;");
           shader.fragmentShader="uniform float uStudioTime;varying vec2 vOcean;\n"+shader.fragmentShader;
           shader.fragmentShader=shader.fragmentShader.replace("#include <normal_fragment_maps>",`#include <normal_fragment_maps>
             float w1=sin(vOcean.x*8.0+uStudioTime*1.5+sin(vOcean.y*4.0))*0.055;
@@ -81,9 +93,9 @@ export function SculptedWorld({playing,reducedMotion,active,resetKey,onExplore}:
           if(!visible||document.hidden||lost)return;
           const config=settings.current,p=pointer.current,moving=config.playing&&!config.reducedMotion&&!p.down;
           if(seenReset!==config.resetKey){time=0;p.yaw=0;p.pitch=0;p.x=0;p.y=0;p.flourish=0;seenReset=config.resetKey;flourishTime=0;}
-          if(moving)time+=dt;entrance=Math.min(entrance+dt,2);
+          if(moving)time+=dt;
           const desiredYaw=.54+p.yaw+(config.reducedMotion?0:p.x*.045+Math.sin(time*.12)*.035),desiredPitch=.57+p.pitch+(config.reducedMotion?0:p.y*.025);
-          if(!needsRender&&!moving&&!p.down&&!p.flourish&&entrance>=2&&Math.abs(cameraYaw-desiredYaw)<.0001&&Math.abs(cameraPitch-desiredPitch)<.0001&&Math.abs(globeAngle-(-2.2+config.active*.64+time*.025))<.0001)return;
+          if(!needsRender&&!moving&&!p.down&&!p.flourish&&Math.abs(cameraYaw-desiredYaw)<.0001&&Math.abs(cameraPitch-desiredPitch)<.0001&&Math.abs(globeAngle-(-2.2+config.active*.64+time*.025))<.0001)return;
           if(!config.reducedMotion&&p.flourish){flourishTime+=dt;if(flourishTime>2){p.flourish=0;flourishTime=0;}}
           mixer!.setTime(time*(config.reducedMotion?0:1));waterUniform.value=time;
           const theta=.72+time*.16;
@@ -95,7 +107,7 @@ export function SculptedWorld({playing,reducedMotion,active,resetKey,onExplore}:
           vessel.position.set(Math.sin(shipTheta)*4.6,-.02+Math.sin(time*1.2)*.024,Math.cos(shipTheta)*4.6);vessel.rotation.set(Math.sin(time*.9)*.018,shipTheta,Math.sin(time*1.1)*.012);
           const desiredGlobe=-2.2+config.active*.64+time*.025;globeAngle+= (desiredGlobe-globeAngle)*(config.reducedMotion?1:Math.min(dt*2,1));globe.rotation.y=globeAngle;
           const ease=1-Math.exp(-dt*4);const yaw=desiredYaw;const pitch=desiredPitch;
-          cameraYaw+=(yaw-cameraYaw)*ease;cameraPitch+=(pitch-cameraPitch)*ease;const distance=18.8+(config.reducedMotion?0:1.8*(1-T.MathUtils.smoothstep(entrance/2,0,1)));
+          cameraYaw+=(yaw-cameraYaw)*ease;cameraPitch+=(pitch-cameraPitch)*ease;const distance=18.8;
           camera.position.set(Math.sin(cameraYaw)*Math.cos(cameraPitch)*distance,Math.sin(cameraPitch)*distance,Math.cos(cameraYaw)*Math.cos(cameraPitch)*distance);camera.lookAt(targetLook);
           beacons.forEach(({mesh,curve,offset})=>mesh.position.copy(curve.getPointAt((time*.055+offset)%1)));
           wakes.forEach((wake,i)=>{const isShip=i<6,k=i%6;const angle=(isShip?shipTheta:theta)-k*.055-.08;const r=isShip?4.6:4.65;wake.position.set(Math.sin(angle)*r,-.075,Math.cos(angle)*r);wake.rotation.z=-angle;wake.scale.setScalar(.6+k*.35);});
@@ -103,20 +115,23 @@ export function SculptedWorld({playing,reducedMotion,active,resetKey,onExplore}:
           renderer.render(scene,camera);needsRender=false;
           if(root.current){root.current.dataset.phase=time.toFixed(2);root.current.dataset.yaw=p.yaw.toFixed(2);root.current.setAttribute("aria-valuenow",String(Math.round(((cameraYaw*180/Math.PI)%360+360)%360)));}
         }
-        // Avoid an initial frame with a zero camera matrix.
-        camera.position.set(8.1,10.2,13.4);camera.lookAt(targetLook);renderer.render(scene,camera);setStatus("ready");raf=requestAnimationFrame(frame);
+        // Reveal only a complete rendered first frame; no mandatory intro/dolly delay.
+        frame(0);
+        if(root.current)root.current.dataset.readyMs=String(Math.round(performance.now()-startedAt));
+        setStatus("ready");
       }catch(error){if(!disposed){cleanup?.();cleanup=undefined;setStatus("unavailable");console.error("3D scene initialization failed",error);}}
     }
-    void boot();return()=>{disposed=true;cancelAnimationFrame(raf);visibility.disconnect();cleanup?.();};
+    void boot();return()=>{disposed=true;abort.abort();cancelAnimationFrame(raf);visibility.disconnect();cleanup?.();};
   },[]);
 
   function move(event:PointerEvent<HTMLDivElement>){const p=pointer.current,rect=event.currentTarget.getBoundingClientRect();p.x=(event.clientX-rect.left)/rect.width*2-1;p.y=(event.clientY-rect.top)/rect.height*2-1;if(p.down){const dx=event.clientX-p.lastX,dy=event.clientY-p.lastY;p.yaw-=dx*.005;p.pitch=Math.max(-.22,Math.min(.4,p.pitch+dy*.002));p.travel+=Math.abs(dx)+Math.abs(dy);p.lastX=event.clientX;p.lastY=event.clientY;if(p.travel>5)onExplore();}}
-  return <div className={s.world} ref={root} data-testid="sculpted-world" data-renderer={status==="ready"?"webgl-3d":status} data-playing={playing&&!reducedMotion} role="slider" aria-label="拖动旋转立体海洋世界" aria-valuemin={0} aria-valuemax={360} aria-valuenow={31} aria-describedby="sculpted-scene-help" tabIndex={0}
-    onPointerDown={e=>{const p=pointer.current;p.down=true;p.lastX=e.clientX;p.lastY=e.clientY;p.travel=0;e.currentTarget.setPointerCapture(e.pointerId);}}
+  return <div className={s.world} ref={root} data-testid="sculpted-world" data-visual="complete" data-renderer={status==="ready"?"webgl-3d":status} data-playing={playing&&!reducedMotion} role={status==="ready"?"slider":"img"} aria-label={status==="ready"?"拖动旋转立体海洋世界":"鲨保保卡通鲨鱼、货轮与环球海洋场景"} aria-valuemin={status==="ready"?0:undefined} aria-valuemax={status==="ready"?360:undefined} aria-valuenow={status==="ready"?31:undefined} aria-describedby="sculpted-scene-help" tabIndex={status==="ready"?0:-1}
+    onPointerDown={e=>{if(status!=="ready")return;const p=pointer.current;p.down=true;p.lastX=e.clientX;p.lastY=e.clientY;p.travel=0;e.currentTarget.setPointerCapture(e.pointerId);}}
     onPointerMove={move} onPointerUp={()=>{const p=pointer.current;p.down=false;if(p.travel<5&&!reducedMotion)p.flourish=1;}} onPointerCancel={()=>{pointer.current.down=false;}} onPointerLeave={()=>{if(!pointer.current.down){pointer.current.x=0;pointer.current.y=0;}}}
     onKeyDown={e=>{if(e.key==="ArrowLeft"||e.key==="ArrowRight"){e.preventDefault();pointer.current.yaw+=e.key==="ArrowLeft"?-.2:.2;onExplore();}if(e.key==="ArrowUp"||e.key==="ArrowDown"){e.preventDefault();pointer.current.pitch=Math.max(-.22,Math.min(.4,pointer.current.pitch+(e.key==="ArrowUp"?.1:-.1)));onExplore();}}}>
+    <picture className={s.poster}><source media="(max-width:760px)" srcSet={WORLD_POSTER_MOBILE}/><img src={WORLD_POSTER_DESKTOP} width="760" height="383" alt="" aria-hidden="true" loading="eager" fetchPriority="high" decoding="sync" draggable={false}/></picture>
     <div className={s.canvas} ref={host}/>
-    {status!=="ready"&&<div className={s.loader}>{status==="loading"?<><span className={s.loadingRing}/><b>正在驶入鲨保保的世界</b><small>SETTING SAIL…</small></>:<><b>一起，探索更远的市场。</b><p>当前设备未能开启立体场景，你仍可浏览下方保险方案。</p></>}</div>}
+    {status==="unavailable"&&<p className={s.srOnly} role="status">当前设备显示完整场景预览，可继续查看保险方案。</p>}
     <div className={s.coordinate} aria-hidden="true"><i/> SHARKBOOM OCEAN <span>31° N / 121° E</span></div>
     <span className={s.sceneCaption} aria-hidden="true">一只鲨，一起出海。</span>
     <p id="sculpted-scene-help" className={s.srOnly}>拖动改变三维视角，方向键调整镜头，点击场景与小鲨互动。可在下方暂停动画。</p>

@@ -1,0 +1,18 @@
+{
+  "world": {
+    "path": "/studio/optimized/sharkboom-world.e1b3476e9875.glb.bin",
+    "fallback": "/studio/optimized/sharkboom-world.e1b3476e9875.glb",
+    "originalBytes": 7128448,
+    "decodedBytes": 1341352,
+    "bytes": 602839,
+    "reduction": 91.5
+  },
+  "mascot": {
+    "path": "/studio/optimized/shark-mascot.38bb1d0c8f8f.glb.bin",
+    "fallback": "/studio/optimized/shark-mascot.38bb1d0c8f8f.glb",
+    "originalBytes": 1147156,
+    "decodedBytes": 226584,
+    "bytes": 85159,
+    "reduction": 92.6
+  }
+}
