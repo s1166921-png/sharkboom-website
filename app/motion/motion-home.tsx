@@ -52,15 +52,6 @@ export function MotionHome(){
   },[]);
 
   useEffect(()=>{
-    const strip=tabs.current;
-    const selected=strip?.querySelector<HTMLElement>("[aria-selected=true]");
-    if(strip&&selected&&strip.scrollWidth>strip.clientWidth){
-      const left=selected.getBoundingClientRect().left-strip.getBoundingClientRect().left+strip.scrollLeft;
-      strip.scrollTo({left:left-(strip.clientWidth-selected.clientWidth)/2,behavior:reducedMotion?"instant":"smooth"});
-    }
-  },[active,reducedMotion]);
-
-  useEffect(()=>{
     const elements=document.querySelectorAll<HTMLElement>("[data-motion-reveal]");
     const observer=new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add(s.revealed);observer.unobserve(entry.target);}}),{threshold:.1});
     elements.forEach(el=>observer.observe(el));return()=>observer.disconnect();
@@ -101,20 +92,20 @@ export function MotionHome(){
           </div>
         </div>
 
-        <div className={`${s.productTabs} ${t.tabs}`} ref={tabs} role="tablist" tabIndex={-1} aria-label="探索五类保障方向" onKeyDown={e=>{
-          let next=active;
-          if(e.key==="ArrowRight")next=(active+1)%products.length;
-          else if(e.key==="ArrowLeft")next=(active+products.length-1)%products.length;
-          else if(e.key==="Home")next=0;
-          else if(e.key==="End")next=products.length-1;
-          else return;
-          e.preventDefault();choose(next);tabs.current?.querySelectorAll<HTMLButtonElement>("[role=tab]")[next]?.focus();
-        }}>{products.map((p,i)=><button key={p.code} id={`motion-tab-${p.code}`} role="tab" aria-selected={active===i} aria-controls="motion-product-panel" tabIndex={active===i?0:-1} onClick={()=>choose(i)} className={active===i?s.activeTab:""}><small>0{i+1} / {p.code}</small><span>{p.name}</span><span className={s.tabTrack}>{active===i&&<i key={`${active}-${resetKey}`} style={{animationPlayState:playing&&!reducedMotion?"running":"paused"}}/>}</span></button>)}</div>
       </section>
 
       <section id="solutions" className={s.solutions} aria-labelledby="solutions-title">
         <div className={s.contentWidth}>
           <div className={s.sectionIntro} data-motion-reveal><div><p className={s.eyebrow}>01 / FIND YOUR PROTECTION</p><h2 id="solutions-title">每一种出海，<br/>都有保障的方向。</h2></div><p>从你的业务出发，<br/>把保障看清楚，再安心向前。</p><a className={s.downLink} href="#motion-product-panel" aria-label="查看当前保障方案"><ArrowDown size={24}/></a></div>
+          <div className={`${s.productTabs} ${t.solutionTabs}`} ref={tabs} role="tablist" tabIndex={-1} aria-label="探索五类保障方向" onKeyDown={e=>{
+            let next=active;
+            if(e.key==="ArrowRight")next=(active+1)%products.length;
+            else if(e.key==="ArrowLeft")next=(active+products.length-1)%products.length;
+            else if(e.key==="Home")next=0;
+            else if(e.key==="End")next=products.length-1;
+            else return;
+            e.preventDefault();choose(next);tabs.current?.querySelectorAll<HTMLButtonElement>("[role=tab]")[next]?.focus();
+          }}>{products.map((p,i)=><button key={p.code} id={`motion-tab-${p.code}`} role="tab" aria-selected={active===i} aria-controls="motion-product-panel" tabIndex={active===i?0:-1} onClick={()=>choose(i)}><small>0{i+1} / {p.code}</small><span>{p.name}</span></button>)}</div>
           <div className={s.productPanel} id="motion-product-panel" role="tabpanel" aria-labelledby={`motion-tab-${product.code}`} tabIndex={0}>
             <div className={s.productLead} key={product.code}><div className={s.productKicker}><Icon size={26} strokeWidth={1.35}/><span>0{active+1} / {product.en}</span></div><h3>{product.name}</h3><p className={s.productScene}>{product.scene}</p><p className={s.productDescription}>{product.description}</p><div className={s.panelActions}><button className={s.primary} onClick={()=>setDetail(product)}>了解保障详情 <ArrowUpRight size={18}/></button><button className={s.inlineLink} onClick={talk}>咨询投保方案 <ArrowRight size={16}/></button></div></div>
             <div className={s.productChecklist}><span className={s.miniLabel}>从这些问题开始了解</span>{product.points.map((point,index)=><div key={point}><span>0{index+1}</span><p>{point}</p><Check size={16}/></div>)}<p className={s.productNote}>具体适用条件与保障范围，以确认的方案和正式条款为准。</p></div>
