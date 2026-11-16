@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type PointerEvent } from "react";
 import s from "./studio.module.css";
 import * as T from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
@@ -16,6 +16,7 @@ export function SculptedWorld({reducedMotion,active}:Props){
   const host=useRef<HTMLDivElement>(null),root=useRef<HTMLDivElement>(null);
   const [status,setStatus]=useState<"loading"|"ready"|"unavailable">("loading");
   const settings=useRef({reducedMotion,active});
+  const view=useRef({pointerId:null as number|null,lastX:0,lastY:0,yaw:0,pitch:0});
   useEffect(()=>{settings.current={reducedMotion,active};},[reducedMotion,active]);
 
   useEffect(()=>{
@@ -92,7 +93,8 @@ export function SculptedWorld({reducedMotion,active}:Props){
           if(!visible||document.hidden||lost)return;
           const config=settings.current,moving=!config.reducedMotion;
           if(moving)time+=dt;
-          const desiredYaw=.54+(config.reducedMotion?0:Math.sin(time*.12)*.035),desiredPitch=.57;
+          // Camera adjustments never pause or reset the independent animation clock.
+          const desiredYaw=.54+view.current.yaw+(config.reducedMotion?0:Math.sin(time*.12)*.035),desiredPitch=.57+view.current.pitch;
           if(!needsRender&&!moving&&Math.abs(cameraYaw-desiredYaw)<.0001&&Math.abs(cameraPitch-desiredPitch)<.0001&&Math.abs(globeAngle-(-2.2+config.active*.64+time*.025))<.0001)return;
           mixer!.setTime(time*(config.reducedMotion?0:1));waterUniform.value=time;
           const theta=.72+time*.16;
@@ -109,7 +111,7 @@ export function SculptedWorld({reducedMotion,active}:Props){
           wakes.forEach((wake,i)=>{const isShip=i<6,k=i%6;const angle=(isShip?shipTheta:theta)-k*.055-.08;const r=isShip?4.6:4.65;wake.position.set(Math.sin(angle)*r,-.075,Math.cos(angle)*r);wake.rotation.z=-angle;wake.scale.setScalar(.6+k*.35);});
           bubbles.children.forEach((b,i)=>{const a=theta-.18-i*.027;b.position.set(Math.sin(a)*4.65,.12+(Math.sin(time*2+i)*.5+.5)*.3,Math.cos(a)*4.65);});
           renderer.render(scene,camera);needsRender=false;
-          if(root.current)root.current.dataset.phase=time.toFixed(2);
+          if(root.current){root.current.dataset.phase=time.toFixed(2);root.current.setAttribute("aria-valuenow",String(Math.round((((.54+view.current.yaw)*180/Math.PI)%360+360)%360)));}
         }
         // Reveal only a complete rendered first frame; no mandatory intro/dolly delay.
         frame(0);
@@ -120,7 +122,21 @@ export function SculptedWorld({reducedMotion,active}:Props){
     void boot();return()=>{disposed=true;abort.abort();cancelAnimationFrame(raf);visibility.disconnect();cleanup?.();};
   },[]);
 
-  return <div className={s.world} ref={root} data-testid="sculpted-world" data-visual="complete" data-renderer={status==="ready"?"webgl-3d":status} data-playing={!reducedMotion} role="img" aria-label="卡通鲨鱼自动循环游动的立体海洋场景">
+  function adjustView(event:PointerEvent<HTMLDivElement>){
+    const cameraView=view.current;if(cameraView.pointerId!==event.pointerId)return;
+    cameraView.yaw-=(event.clientX-cameraView.lastX)*.005;
+    cameraView.pitch=Math.max(-.22,Math.min(.4,cameraView.pitch+(event.clientY-cameraView.lastY)*.002));
+    cameraView.lastX=event.clientX;cameraView.lastY=event.clientY;
+  }
+  function endAdjustment(event:PointerEvent<HTMLDivElement>){
+    if(view.current.pointerId!==event.pointerId)return;
+    view.current.pointerId=null;
+    if(event.currentTarget.hasPointerCapture(event.pointerId))event.currentTarget.releasePointerCapture(event.pointerId);
+  }
+  return <div className={s.world} ref={root} data-testid="sculpted-world" data-visual="complete" data-renderer={status==="ready"?"webgl-3d":status} data-playing={!reducedMotion} role={status==="ready"?"slider":"img"} aria-label={status==="ready"?"立体海洋场景视角，小鲨自动循环游动":"卡通鲨鱼自动循环游动的立体海洋场景"} aria-valuemin={status==="ready"?0:undefined} aria-valuemax={status==="ready"?360:undefined} aria-valuenow={status==="ready"?31:undefined} tabIndex={status==="ready"?0:-1}
+    onPointerDown={event=>{if(status!=="ready"||!event.isPrimary||event.button!==0||view.current.pointerId!==null)return;view.current.pointerId=event.pointerId;view.current.lastX=event.clientX;view.current.lastY=event.clientY;event.currentTarget.setPointerCapture(event.pointerId);}}
+    onPointerMove={adjustView} onPointerUp={endAdjustment} onPointerCancel={endAdjustment} onLostPointerCapture={event=>{if(view.current.pointerId===event.pointerId)view.current.pointerId=null;}}
+    onKeyDown={event=>{if(status!=="ready")return;const cameraView=view.current;if(event.key==="ArrowLeft"||event.key==="ArrowRight"){event.preventDefault();cameraView.yaw+=event.key==="ArrowLeft"?-.2:.2;}else if(event.key==="ArrowUp"||event.key==="ArrowDown"){event.preventDefault();cameraView.pitch=Math.max(-.22,Math.min(.4,cameraView.pitch+(event.key==="ArrowUp"?.1:-.1)));}}}>
     <picture className={s.poster}><source media="(max-width:760px)" srcSet={WORLD_POSTER_MOBILE}/><img src={WORLD_POSTER_DESKTOP} width="760" height="383" alt="" aria-hidden="true" loading="eager" fetchPriority="high" decoding="sync" draggable={false}/></picture>
     <div className={s.canvas} ref={host}/>
     {status==="unavailable"&&<p className={s.srOnly} role="status">当前设备显示完整场景预览，可继续查看保险方案。</p>}
