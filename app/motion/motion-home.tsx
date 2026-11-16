@@ -8,7 +8,6 @@ import { motionProducts as products, type MotionProduct } from "./products";
 import s from "./motion.module.css";
 import { SculptedWorld } from "../motion-3d/world";
 import t from "../motion-3d/studio.module.css";
-import { MascotPortrait } from "../motion-3d/portrait";
 
 const reducedQuery="(prefers-reduced-motion: reduce)";
 function subscribeMotion(callback:()=>void){const media=window.matchMedia(reducedQuery);media.addEventListener("change",callback);return()=>media.removeEventListener("change",callback);}
@@ -138,7 +137,7 @@ export function MotionHome({immersive=false}:{immersive?:boolean}){
 
       <section id="about" className={s.about}>
         <div className={`${s.contentWidth} ${s.aboutGrid}`}>
-          <div className={s.aboutArt} data-motion-reveal>{immersive?<MascotPortrait reducedMotion={reducedMotion}/>:<img src="/motion/shark.webp" alt="通透蓝色的鲨鱼品牌视觉" width="1152" height="691" loading="lazy"/>}<span>ALWAYS MOVING<br/><b>FORWARD.</b></span></div>
+          <div className={`${s.aboutArt} ${immersive?t.aboutLogo:""}`} data-motion-reveal>{immersive?<img src="/logo.png" alt="SharkBoom 鲨保保品牌 Logo" width="763" height="341" loading="lazy"/>:<img src="/motion/shark.webp" alt="通透蓝色的鲨鱼品牌视觉" width="1152" height="691" loading="lazy"/>}<span>ALWAYS MOVING<br/><b>FORWARD.</b></span></div>
           <div data-motion-reveal><p className={s.eyebrow}>03 / MEET SHARKBOOM</p><h2>专注跨境，<br/>也专注每一个你。</h2><p className={s.aboutLead}>鲨保保，面向中国跨境卖家的<br/>保险与保函服务伙伴。</p><p className={s.aboutBody}>从产品责任到跨境运输，从知识产权风险到欧洲税务担保与贸易收款，我们围绕实际经营需求，协助你了解保障、准备资料、对接服务。</p><button className={s.inlineLink} onClick={talk}>认识你的服务伙伴 <ArrowUpRight size={19}/></button></div>
         </div>
       </section>
