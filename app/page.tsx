@@ -1,5 +1,1 @@
-import { Showcase } from "./showcase";
-
-export default function Home() {
-  return <Showcase variant="professional" />;
-}
+export { default, metadata } from "./motion-3d/page";

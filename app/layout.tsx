@@ -7,11 +7,11 @@ export async function generateMetadata(): Promise<Metadata> {
   const protocol = host.includes("localhost") ? "http" : "https";
   const image = `${protocol}://${host}/og.png`;
   return {
-    title: "鲨保保 SharkBoom · 官网三种风格提案",
-    description: "为中国跨境卖家提供保险与保函服务。探索蓝白专业、深海科技与温暖编辑三种官网首页设计。",
+    title: "鲨保保 SharkBoom · 官网设计预览",
+    description: "为中国跨境卖家提供保险与保函服务。探索鲨鲨航海 3D 与蓝白专业、深海科技、温暖编辑、环球护航五种首页设计。",
     robots: { index: false, follow: false },
     icons: { icon: "/logo.png" },
-    openGraph: { title: "鲨保保 SharkBoom", description: "跨境电商保险与保函服务 · 三种首页风格", type: "website", images: [{ url: image, alt: "鲨保保跨境电商保险与保函服务" }] },
+    openGraph: { title: "鲨保保 SharkBoom", description: "跨境电商保险与保函服务 · 官网设计预览", type: "website", images: [{ url: image, alt: "鲨保保跨境电商保险与保函服务" }] },
     twitter: { card: "summary_large_image", title: "鲨保保 SharkBoom", images: [image] },
   };
 }

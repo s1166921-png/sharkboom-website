@@ -74,7 +74,7 @@ export function MotionHome({immersive=false}:{immersive?:boolean}){
 
   return <div className={`${s.site} ${immersive?t.studio:""}`} id="motion-top">
     <a className={s.skipLink} href="#motion-main">跳到主要内容</a>
-    <div className={s.previewBar}><span>鲨保保 · 首页风格预览</span><nav aria-label="切换网页风格"><a href="/">蓝白专业</a><a href="/ocean">深海科技</a><a href="/editorial">温暖编辑</a><a href="/motion" aria-current={immersive?undefined:"page"}>环球护航</a>{immersive&&<a href="/motion-3d" aria-current="page">鲨鲨航海 <small>3D</small></a>}</nav><span className={s.previewMark}>{immersive?"05 / SCULPTED WORLD":"04 / IN MOTION"}</span></div>
+    <div className={s.previewBar}><span>鲨保保 · 首页风格预览</span><nav aria-label="切换网页风格"><a href="/professional">蓝白专业</a><a href="/ocean">深海科技</a><a href="/editorial">温暖编辑</a><a href="/motion" aria-current={immersive?undefined:"page"}>环球护航</a><a href="/motion-3d" aria-current={immersive?"page":undefined}>鲨鲨航海 <small>3D · 最新</small></a></nav><span className={s.previewMark}>{immersive?"05 / SCULPTED WORLD":"04 / IN MOTION"}</span></div>
     <header className={s.header}>
       <div className={s.navInner}>
         <a href="#motion-top" className={s.brand} aria-label="鲨保保首页"><img src="/logo.png" width="763" height="341" alt="SharkBoom 鲨保保"/></a>

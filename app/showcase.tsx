@@ -4,9 +4,13 @@ import { ArrowDown, ArrowDownRight, ArrowRight, ArrowUpRight, Check, ChevronDown
 
 type Variant = "professional" | "ocean" | "editorial";
 const directions = [
-  { id:"professional", name:"蓝白专业", en:"THE TRUSTED PARTNER", href:"/", image:"/hero-professional.png", description:"清晰的信息层级与蓝白配色，突出专业、信任和咨询转化。" },
+  { id:"professional", name:"蓝白专业", en:"THE TRUSTED PARTNER", href:"/professional", image:"/hero-professional.png", description:"清晰的信息层级与蓝白配色，突出专业、信任和咨询转化。" },
   { id:"ocean", name:"深海科技", en:"BEYOND BORDERS", href:"/ocean", image:"/hero-ocean.png", description:"深海蓝与全球航线，展现跨境业务的国际视野和品牌张力。" },
   { id:"editorial", name:"温暖编辑", en:"A THOUGHTFUL JOURNEY", href:"/editorial", image:"/hero-editorial.png", description:"米白留白、衬线标题与港口摄影，让专业服务更有温度。" },
+] as const;
+const previewDirections = [...directions,
+  {id:"motion",name:"环球护航",href:"/motion"},
+  {id:"motion-3d",name:"鲨鲨航海 3D",href:"/motion-3d"},
 ] as const;
 const products = [
   { code:"CGL", en:"PRODUCT LIABILITY", name:"产品责任险", short:"让产品走向世界，保障随之到位。", description:"面向跨境电商经营中的产品责任风险，了解适用平台、保障范围及 COI 保险凭证要求。", icon:ShieldCheck, tag:"平台经营保障", audience:"在海外电商平台销售商品的企业与卖家", points:["了解产品引发人身伤害或财产损失的责任保障","根据经营平台、销售地区和产品类别匹配方案","协助准备投保资料与保险凭证"], materials:"企业主体信息、经营平台、产品清单及实际销售情况。" },
@@ -43,7 +47,7 @@ export function Showcase({variant}:{variant:Variant}){
   const ocean=variant==="ocean",editorial=variant==="editorial";
   function contactUs(){setProduct(null);setContact(true);setMenu(false);}
   return <div className={`site ${variant}`} id="top">
-    <div className="direction-bar"><span className="direction-label"><i/>鲨保保 · 首页风格提案</span><nav className="direction-tabs" aria-label="切换网页风格">{directions.map((d,i)=><a key={d.id} href={d.href} aria-current={d.id===variant?"page":undefined} className={d.id===variant?"selected":""}><span>0{i+1}</span>{d.name}</a>)}</nav><button className="compare-button" onClick={()=>setCompare(true)}>比较设计 <ArrowUpRight size={13}/></button></div>
+    <div className="direction-bar"><span className="direction-label"><i/>鲨保保 · 首页风格提案</span><nav className="direction-tabs" aria-label="切换网页风格">{previewDirections.map((d,i)=><a key={d.id} href={d.href} aria-current={d.id===variant?"page":undefined} className={d.id===variant?"selected":""}><span>0{i+1}</span>{d.name}{d.id==="motion-3d"&&<small>最新</small>}</a>)}</nav><button className="compare-button" onClick={()=>setCompare(true)}>比较设计 <ArrowUpRight size={13}/></button></div>
     <header className="header"><div className="container nav-shell"><Brand/><nav className={`main-nav ${menu?"nav-open":""}`} aria-label="主导航"><a className="active" href="#top" onClick={()=>setMenu(false)}>首页</a><a href="#products" onClick={()=>setMenu(false)}>业务险种 <ChevronDown size={12}/></a><a href="#scenarios" onClick={()=>setMenu(false)}>服务场景</a><a href="#about" onClick={()=>setMenu(false)}>关于我们</a><button onClick={contactUs}>联系我们</button></nav><button className="nav-cta" onClick={contactUs}>咨询投保方案 <ArrowUpRight size={15}/></button><button className="icon-button mobile-menu" onClick={()=>setMenu(v=>!v)} aria-label={menu?"收起导航":"展开导航"} aria-expanded={menu}>{menu?<X/>:<Menu/>}</button></div></header>
     <main>
       {variant==="professional"&&<><section className="hero hero-professional"><div className="container hero-grid"><div className="hero-copy"><p className="eyebrow"><i/>专注中国跨境卖家</p><h1>为每一次出海，<br/>多一份<span>确定。</span></h1><p className="hero-description">从产品走向海外，到货物抵达彼岸。<br/>鲨保保提供跨境保险与保函服务，<br className="desktop-break"/>陪你把生意做得更安心。</p><div className="hero-actions"><a className="button button-blue" href="#products">了解保障方案 <ArrowUpRight size={18}/></a><button className="text-button" onClick={contactUs}>和我们聊聊 <ArrowRight size={18}/></button></div><div className="hero-note"><ShieldCheck size={16}/>方案咨询<i/>投保协助<i/>后续服务</div></div><div className="professional-art"><img src="/hero-professional.png" alt="蓝色鲨鱼盾牌与跨境货物的品牌视觉" width="1536" height="1024" fetchPriority="high"/><div className="art-label"><span><ShieldCheck size={19}/></span><div><strong>你的出海保障伙伴</strong><small>YOUR CROSS-BORDER PARTNER</small></div><Check size={18}/></div><small className="art-coordinate">SHARKBOOM · PROTECTION IN MOTION</small></div></div></section><div className="trust-strip"><div className="container trust-grid">{[{icon:Globe2,title:"聚焦跨境经营",text:"看懂不同市场的保障需求"},{icon:ShieldCheck,title:"五大保障方向",text:"从平台经营到跨境贸易"},{icon:FileCheck2,title:"专业协助对接",text:"材料与方案清晰沟通"},{icon:Headphones,title:"服务持续跟进",text:"投保与后续问题有人协助"}].map(t=><div key={t.title}><t.icon/><span><b>{t.title}</b><small>{t.text}</small></span></div>)}</div></div></>}
