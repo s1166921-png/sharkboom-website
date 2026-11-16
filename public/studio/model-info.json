@@ -1,0 +1,15 @@
+{
+  "version": 2,
+  "models": [
+    "continuous skinned cartoon shark",
+    "container vessel",
+    "raised coastline globe",
+    "miniature city harbor",
+    "ocean platform"
+  ],
+  "animation": "Shark_Organic_Swim",
+  "spineBones": 6,
+  "source": "assets/3d/build-world.mjs",
+  "coastlines": "Natural Earth public domain",
+  "rasterBillboards": 0
+}

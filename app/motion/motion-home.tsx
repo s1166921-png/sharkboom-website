@@ -6,6 +6,9 @@ import { ArrowDown, ArrowRight, ArrowUpRight, Check, ChevronDown, FileCheck2, Gl
 import { MotionWorld } from "./motion-world";
 import { motionProducts as products, type MotionProduct } from "./products";
 import s from "./motion.module.css";
+import { SculptedWorld } from "../motion-3d/world";
+import t from "../motion-3d/studio.module.css";
+import { MascotPortrait } from "../motion-3d/portrait";
 
 const reducedQuery="(prefers-reduced-motion: reduce)";
 function subscribeMotion(callback:()=>void){const media=window.matchMedia(reducedQuery);media.addEventListener("change",callback);return()=>media.removeEventListener("change",callback);}
@@ -24,7 +27,7 @@ function Dialog({title,onClose,children}:{title:string;onClose:()=>void;children
   </dialog>;
 }
 
-export function MotionHome(){
+export function MotionHome({immersive=false}:{immersive?:boolean}){
   const [active,setActive]=useState(0);
   const [playing,setPlaying]=useState(true);
   const [resetKey,setResetKey]=useState(0);
@@ -69,9 +72,9 @@ export function MotionHome(){
   function talk(){setMenu(false);setDetail(null);setContact(true);}
   function reset(){setActive(0);setResetKey(key=>key+1);setPlaying(true);}
 
-  return <div className={s.site} id="motion-top">
+  return <div className={`${s.site} ${immersive?t.studio:""}`} id="motion-top">
     <a className={s.skipLink} href="#motion-main">跳到主要内容</a>
-    <div className={s.previewBar}><span>鲨保保 · 首页风格预览</span><nav aria-label="切换网页风格"><a href="/">蓝白专业</a><a href="/ocean">深海科技</a><a href="/editorial">温暖编辑</a><a href="/motion" aria-current="page">环球护航 <small>NEW</small></a></nav><span className={s.previewMark}>04 / IN MOTION</span></div>
+    <div className={s.previewBar}><span>鲨保保 · 首页风格预览</span><nav aria-label="切换网页风格"><a href="/">蓝白专业</a><a href="/ocean">深海科技</a><a href="/editorial">温暖编辑</a><a href="/motion" aria-current={immersive?undefined:"page"}>环球护航</a>{immersive&&<a href="/motion-3d" aria-current="page">鲨鲨航海 <small>3D</small></a>}</nav><span className={s.previewMark}>{immersive?"05 / SCULPTED WORLD":"04 / IN MOTION"}</span></div>
     <header className={s.header}>
       <div className={s.navInner}>
         <a href="#motion-top" className={s.brand} aria-label="鲨保保首页"><img src="/logo.png" width="763" height="341" alt="SharkBoom 鲨保保"/></a>
@@ -83,16 +86,16 @@ export function MotionHome(){
     </header>
 
     <main id="motion-main">
-      <section className={s.hero} ref={hero} aria-labelledby="motion-title">
-        <div className={s.heroCopy}>
+      <section className={`${s.hero} ${immersive?t.hero:""}`} ref={hero} aria-labelledby="motion-title">
+        <div className={`${s.heroCopy} ${immersive?t.copy:""}`}>
           <p className={s.eyebrow}>SHARKBOOM / GLOBAL PROTECTION</p>
           <h1 id="motion-title">让生意，<br/>跨越山海<span>。</span></h1>
-          <p className={s.heroDescription}>跨境保险与保函服务，陪你走向更远的市场。</p>
+          <p className={s.heroDescription}>{immersive?<>跨境保险与保函服务，<br/>陪你走向更远的市场。</>:"跨境保险与保函服务，陪你走向更远的市场。"}</p>
           <div className={s.heroActions}><a href="#solutions" className={s.primary}>探索保险方案 <ArrowRight size={21}/></a><button onClick={talk} className={s.textAction}>咨询顾问 <ArrowUpRight size={19}/></button></div>
         </div>
 
-        <div className={s.stageShell}>
-          <MotionWorld playing={playing&&!detail&&!contact&&heroVisible} reducedMotion={reducedMotion} active={active} resetKey={resetKey} onExplore={()=>setPlaying(false)}/>
+        <div className={`${s.stageShell} ${immersive?t.stage:""}`}>
+          {immersive?<SculptedWorld playing={playing&&!detail&&!contact&&heroVisible} reducedMotion={reducedMotion} active={active} resetKey={resetKey} onExplore={()=>setPlaying(false)}/>:<MotionWorld playing={playing&&!detail&&!contact&&heroVisible} reducedMotion={reducedMotion} active={active} resetKey={resetKey} onExplore={()=>setPlaying(false)}/>}
           <div className={s.stageControls}>
             <span className={s.dragHint}><Hand size={18} strokeWidth={1.5}/><span>拖动探索世界<small>DRAG TO EXPLORE</small></span></span>
             <span className={s.motionLabel}><span className={playing&&!reducedMotion?s.liveDot:s.quietDot}/>{reducedMotion?"简化动效模式":playing?"自动环游中":"自由探索模式"}</span>
@@ -100,7 +103,7 @@ export function MotionHome(){
           </div>
         </div>
 
-        <div className={s.productTabs} ref={tabs} role="tablist" tabIndex={-1} aria-label="探索五类保障方向" onKeyDown={e=>{
+        <div className={`${s.productTabs} ${immersive?t.tabs:""}`} ref={tabs} role="tablist" tabIndex={-1} aria-label="探索五类保障方向" onKeyDown={e=>{
           let next=active;
           if(e.key==="ArrowRight")next=(active+1)%products.length;
           else if(e.key==="ArrowLeft")next=(active+products.length-1)%products.length;
@@ -135,7 +138,7 @@ export function MotionHome(){
 
       <section id="about" className={s.about}>
         <div className={`${s.contentWidth} ${s.aboutGrid}`}>
-          <div className={s.aboutArt} data-motion-reveal><img src="/motion/shark.webp" alt="通透蓝色的鲨鱼品牌视觉" width="1152" height="691" loading="lazy"/><span>ALWAYS MOVING<br/><b>FORWARD.</b></span></div>
+          <div className={s.aboutArt} data-motion-reveal>{immersive?<MascotPortrait reducedMotion={reducedMotion}/>:<img src="/motion/shark.webp" alt="通透蓝色的鲨鱼品牌视觉" width="1152" height="691" loading="lazy"/>}<span>ALWAYS MOVING<br/><b>FORWARD.</b></span></div>
           <div data-motion-reveal><p className={s.eyebrow}>03 / MEET SHARKBOOM</p><h2>专注跨境，<br/>也专注每一个你。</h2><p className={s.aboutLead}>鲨保保，面向中国跨境卖家的<br/>保险与保函服务伙伴。</p><p className={s.aboutBody}>从产品责任到跨境运输，从知识产权风险到欧洲税务担保与贸易收款，我们围绕实际经营需求，协助你了解保障、准备资料、对接服务。</p><button className={s.inlineLink} onClick={talk}>认识你的服务伙伴 <ArrowUpRight size={19}/></button></div>
         </div>
       </section>
