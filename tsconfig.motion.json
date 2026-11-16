@@ -1,0 +1,6 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "incremental": false },
+  "include": ["next-env.d.ts", "app/motion/**/*.ts", "app/motion/**/*.tsx"],
+  "exclude": ["node_modules", "worker", "db"]
+}
