@@ -3,7 +3,6 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { ArrowDown, ArrowRight, ArrowUpRight, Check, ChevronDown, FileCheck2, Globe2, Hand, Headphones, Mail, Menu, MessageCircle, Pause, Phone, Play, RotateCcw, ShieldCheck, X } from "lucide-react";
-import { MotionWorld } from "./motion-world";
 import { motionProducts as products, type MotionProduct } from "./products";
 import s from "./motion.module.css";
 import { SculptedWorld } from "../motion-3d/world";
@@ -26,7 +25,7 @@ function Dialog({title,onClose,children}:{title:string;onClose:()=>void;children
   </dialog>;
 }
 
-export function MotionHome({immersive=false}:{immersive?:boolean}){
+export function MotionHome(){
   const [active,setActive]=useState(0);
   const [playing,setPlaying]=useState(true);
   const [resetKey,setResetKey]=useState(0);
@@ -71,9 +70,9 @@ export function MotionHome({immersive=false}:{immersive?:boolean}){
   function talk(){setMenu(false);setDetail(null);setContact(true);}
   function reset(){setActive(0);setResetKey(key=>key+1);setPlaying(true);}
 
-  return <div className={`${s.site} ${immersive?t.studio:""}`} id="motion-top">
+  return <div className={`${s.site} ${t.studio}`} id="motion-top">
     <a className={s.skipLink} href="#motion-main">跳到主要内容</a>
-    <div className={s.previewBar}><span>鲨保保 · 首页风格预览</span><nav aria-label="切换网页风格"><a href="/professional">蓝白专业</a><a href="/ocean">深海科技</a><a href="/editorial">温暖编辑</a><a href="/motion" aria-current={immersive?undefined:"page"}>环球护航</a><a href="/motion-3d" aria-current={immersive?"page":undefined}>鲨鲨航海 <small>3D · 最新</small></a></nav><span className={s.previewMark}>{immersive?"05 / SCULPTED WORLD":"04 / IN MOTION"}</span></div>
+    <div className={s.previewBar}><span>鲨保保 · 首页风格预览</span><nav aria-label="切换网页风格"><a href="/professional">蓝白专业</a><a href="/ocean">深海科技</a><a href="/editorial">温暖编辑</a><a href="/motion-3d" aria-current="page">鲨鲨航海 <small>3D · 最新</small></a></nav><span className={s.previewMark}>04 / SCULPTED WORLD</span></div>
     <header className={s.header}>
       <div className={s.navInner}>
         <a href="#motion-top" className={s.brand} aria-label="鲨保保首页"><img src="/logo.png" width="763" height="341" alt="SharkBoom 鲨保保"/></a>
@@ -85,16 +84,16 @@ export function MotionHome({immersive=false}:{immersive?:boolean}){
     </header>
 
     <main id="motion-main">
-      <section className={`${s.hero} ${immersive?t.hero:""}`} ref={hero} aria-labelledby="motion-title">
-        <div className={`${s.heroCopy} ${immersive?t.copy:""}`}>
+      <section className={`${s.hero} ${t.hero}`} ref={hero} aria-labelledby="motion-title">
+        <div className={`${s.heroCopy} ${t.copy}`}>
           <p className={s.eyebrow}>SHARKBOOM / GLOBAL PROTECTION</p>
           <h1 id="motion-title">让生意，<br/>跨越山海<span>。</span></h1>
-          <p className={s.heroDescription}>{immersive?<>跨境保险与保函服务，<br/>陪你走向更远的市场。</>:"跨境保险与保函服务，陪你走向更远的市场。"}</p>
+          <p className={s.heroDescription}>跨境保险与保函服务，<br/>陪你走向更远的市场。</p>
           <div className={s.heroActions}><a href="#solutions" className={s.primary}>探索保险方案 <ArrowRight size={21}/></a><button onClick={talk} className={s.textAction}>咨询顾问 <ArrowUpRight size={19}/></button></div>
         </div>
 
-        <div className={`${s.stageShell} ${immersive?t.stage:""}`}>
-          {immersive?<SculptedWorld playing={playing&&!detail&&!contact&&heroVisible} reducedMotion={reducedMotion} active={active} resetKey={resetKey} onExplore={()=>setPlaying(false)}/>:<MotionWorld playing={playing&&!detail&&!contact&&heroVisible} reducedMotion={reducedMotion} active={active} resetKey={resetKey} onExplore={()=>setPlaying(false)}/>}
+        <div className={`${s.stageShell} ${t.stage}`}>
+          <SculptedWorld playing={playing&&!detail&&!contact&&heroVisible} reducedMotion={reducedMotion} active={active} resetKey={resetKey} onExplore={()=>setPlaying(false)}/>
           <div className={s.stageControls}>
             <span className={s.dragHint}><Hand size={18} strokeWidth={1.5}/><span>拖动探索世界<small>DRAG TO EXPLORE</small></span></span>
             <span className={s.motionLabel}><span className={playing&&!reducedMotion?s.liveDot:s.quietDot}/>{reducedMotion?"简化动效模式":playing?"自动环游中":"自由探索模式"}</span>
@@ -102,7 +101,7 @@ export function MotionHome({immersive=false}:{immersive?:boolean}){
           </div>
         </div>
 
-        <div className={`${s.productTabs} ${immersive?t.tabs:""}`} ref={tabs} role="tablist" tabIndex={-1} aria-label="探索五类保障方向" onKeyDown={e=>{
+        <div className={`${s.productTabs} ${t.tabs}`} ref={tabs} role="tablist" tabIndex={-1} aria-label="探索五类保障方向" onKeyDown={e=>{
           let next=active;
           if(e.key==="ArrowRight")next=(active+1)%products.length;
           else if(e.key==="ArrowLeft")next=(active+products.length-1)%products.length;
@@ -137,7 +136,7 @@ export function MotionHome({immersive=false}:{immersive?:boolean}){
 
       <section id="about" className={s.about}>
         <div className={`${s.contentWidth} ${s.aboutGrid}`}>
-          <div className={`${s.aboutArt} ${immersive?t.aboutLogo:""}`} data-motion-reveal>{immersive?<img src="/logo.png" alt="SharkBoom 鲨保保品牌 Logo" width="763" height="341" loading="lazy"/>:<img src="/motion/shark.webp" alt="通透蓝色的鲨鱼品牌视觉" width="1152" height="691" loading="lazy"/>}<span>ALWAYS MOVING<br/><b>FORWARD.</b></span></div>
+          <div className={`${s.aboutArt} ${t.aboutLogo}`} data-motion-reveal><img src="/logo.png" alt="SharkBoom 鲨保保品牌 Logo" width="763" height="341" loading="lazy"/><span>ALWAYS MOVING<br/><b>FORWARD.</b></span></div>
           <div data-motion-reveal><p className={s.eyebrow}>03 / MEET SHARKBOOM</p><h2>专注跨境，<br/>也专注每一个你。</h2><p className={s.aboutLead}>鲨保保，面向中国跨境卖家的<br/>保险与保函服务伙伴。</p><p className={s.aboutBody}>从产品责任到跨境运输，从知识产权风险到欧洲税务担保与贸易收款，我们围绕实际经营需求，协助你了解保障、准备资料、对接服务。</p><button className={s.inlineLink} onClick={talk}>认识你的服务伙伴 <ArrowUpRight size={19}/></button></div>
         </div>
       </section>
@@ -157,7 +156,7 @@ export function MotionHome({immersive=false}:{immersive?:boolean}){
       <section className={s.finalCta}><div className={s.contentWidth}><p className={s.eyebrow}>THE WORLD IS WAITING.</p><h2>出发，有备而行。</h2><p>下一段跨境旅程，从一次清楚的沟通开始。</p><button className={s.lightButton} onClick={talk}>联系鲨保保 <ArrowUpRight size={21}/></button></div></section>
     </main>
 
-    <footer className={s.footer}><div className={s.footerTop}><a href="#motion-top" className={s.brand}><img src="/logo.png" width="763" height="341" alt="SharkBoom 鲨保保"/></a><p>跨境保险与保函服务<br/><small>PROTECTION FOR YOUR NEXT CHAPTER.</small></p><a href="https://www.usaeu.com/" target="_blank" rel="noreferrer">返回美鸥官网 <ArrowUpRight size={15}/></a><a href="#motion-top">回到顶部 <ArrowUpRight size={15}/></a></div><div className={s.footerBottom}><span>© {new Date().getFullYear()} SharkBoom 鲨保保</span><span>环球护航 · 动态设计预览</span><span>本预览暂未接入真实咨询与投保渠道</span></div></footer>
+    <footer className={s.footer}><div className={s.footerTop}><a href="#motion-top" className={s.brand}><img src="/logo.png" width="763" height="341" alt="SharkBoom 鲨保保"/></a><p>跨境保险与保函服务<br/><small>PROTECTION FOR YOUR NEXT CHAPTER.</small></p><a href="https://www.usaeu.com/" target="_blank" rel="noreferrer">返回美鸥官网 <ArrowUpRight size={15}/></a><a href="#motion-top">回到顶部 <ArrowUpRight size={15}/></a></div><div className={s.footerBottom}><span>© {new Date().getFullYear()} SharkBoom 鲨保保</span><span>鲨鲨航海 · 3D 设计预览</span><span>本预览暂未接入真实咨询与投保渠道</span></div></footer>
 
     {detail&&<Dialog title="了解保障方向" onClose={()=>setDetail(null)}><div className={s.dialogBody}><p className={s.eyebrow}>{detail.code} / {detail.en}</p><h2>{detail.name}</h2><p className={s.dialogIntro}>{detail.description}</p><section><h3>适合谁了解</h3><p>{detail.audience}</p></section><section><h3>可以协助你了解</h3><ul>{detail.points.map(point=><li key={point}><Check size={16}/>{point}</li>)}</ul></section><section><h3>通常需要准备</h3><p>{detail.materials}</p></section><p className={s.dialogNote}>具体适用条件、保障范围及办理资料，以确认的方案和正式条款为准。</p><button className={s.primary} onClick={talk}>咨询投保方案 <ArrowUpRight size={18}/></button></div></Dialog>}
     {contact&&<Dialog title="联系鲨保保" onClose={()=>setContact(false)}><div className={s.dialogBody}><p className={s.eyebrow}>YOUR NEXT STEP STARTS HERE</p><h2>聊聊你的<br/>跨境保障需求。</h2><p className={s.dialogIntro}>正式官网将接入以下联系渠道。<br/>本页为设计预览，联系方式与投保渠道待配置。</p><div className={s.contactOptions}>{[{icon:MessageCircle,name:"企业微信",text:"扫码添加服务人员"},{icon:Phone,name:"电话咨询",text:"直接沟通业务需求"},{icon:Mail,name:"电子邮箱",text:"发送资料与咨询问题"}].map(item=><div key={item.name}><item.icon size={22}/><span><b>{item.name}</b><small>{item.text}</small></span><em>待配置</em></div>)}</div><button className={s.primary} onClick={()=>{setContact(false);document.getElementById("solutions")?.scrollIntoView({behavior:reducedMotion?"instant":"smooth"});}}>先了解保障方案 <ArrowRight size={18}/></button></div></Dialog>}

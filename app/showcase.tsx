@@ -9,7 +9,6 @@ const directions = [
   { id:"editorial", name:"温暖编辑", en:"A THOUGHTFUL JOURNEY", href:"/editorial", image:"/hero-editorial.png", description:"米白留白、衬线标题与港口摄影，让专业服务更有温度。" },
 ] as const;
 const previewDirections = [...directions,
-  {id:"motion",name:"环球护航",href:"/motion"},
   {id:"motion-3d",name:"鲨鲨航海 3D",href:"/motion-3d"},
 ] as const;
 const products = [
