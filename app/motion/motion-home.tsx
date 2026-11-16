@@ -2,7 +2,7 @@
 /* eslint-disable @next/next/no-html-link-for-pages -- Variant previews intentionally use full document navigation to isolate their runtimes. */
 
 import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
-import { ArrowDown, ArrowRight, ArrowUpRight, Check, ChevronDown, FileCheck2, Globe2, Hand, Headphones, Mail, Menu, MessageCircle, Pause, Phone, Play, RotateCcw, ShieldCheck, X } from "lucide-react";
+import { ArrowDown, ArrowRight, ArrowUpRight, Check, ChevronDown, FileCheck2, Globe2, Headphones, Mail, Menu, MessageCircle, Phone, ShieldCheck, X } from "lucide-react";
 import { motionProducts as products, type MotionProduct } from "./products";
 import s from "./motion.module.css";
 import { SculptedWorld } from "../motion-3d/world";
@@ -27,8 +27,7 @@ function Dialog({title,onClose,children}:{title:string;onClose:()=>void;children
 
 export function MotionHome(){
   const [active,setActive]=useState(0);
-  const [playing,setPlaying]=useState(true);
-  const [resetKey,setResetKey]=useState(0);
+  const [autoAdvance,setAutoAdvance]=useState(true);
   const [menu,setMenu]=useState(false);
   const [detail,setDetail]=useState<MotionProduct|null>(null);
   const [contact,setContact]=useState(false);
@@ -40,10 +39,10 @@ export function MotionHome(){
   const Icon=product.icon;
 
   useEffect(()=>{
-    if(!playing||reducedMotion||!heroVisible||detail||contact)return;
+    if(!autoAdvance||reducedMotion||!heroVisible||detail||contact)return;
     const timer=window.setInterval(()=>setActive(index=>(index+1)%products.length),8000);
     return()=>window.clearInterval(timer);
-  },[playing,reducedMotion,resetKey,heroVisible,detail,contact]);
+  },[autoAdvance,reducedMotion,heroVisible,detail,contact]);
 
   useEffect(()=>{
     const observer=new IntersectionObserver(([entry])=>setHeroVisible(entry.isIntersecting),{threshold:.15});
@@ -57,9 +56,8 @@ export function MotionHome(){
     elements.forEach(el=>observer.observe(el));return()=>observer.disconnect();
   },[]);
 
-  function choose(index:number){setActive(index);setPlaying(false);}
+  function choose(index:number){setActive(index);setAutoAdvance(false);}
   function talk(){setMenu(false);setDetail(null);setContact(true);}
-  function reset(){setActive(0);setResetKey(key=>key+1);setPlaying(true);}
 
   return <div className={`${s.site} ${t.studio}`} id="motion-top">
     <a className={s.skipLink} href="#motion-main">跳到主要内容</a>
@@ -84,12 +82,7 @@ export function MotionHome(){
         </div>
 
         <div className={`${s.stageShell} ${t.stage}`}>
-          <SculptedWorld playing={playing&&!detail&&!contact&&heroVisible} reducedMotion={reducedMotion} active={active} resetKey={resetKey} onExplore={()=>setPlaying(false)}/>
-          <div className={s.stageControls}>
-            <span className={s.dragHint}><Hand size={18} strokeWidth={1.5}/><span>拖动探索世界<small>DRAG TO EXPLORE</small></span></span>
-            <span className={s.motionLabel}><span className={playing&&!reducedMotion?s.liveDot:s.quietDot}/>{reducedMotion?"简化动效模式":playing?"自动环游中":"自由探索模式"}</span>
-            <div className={s.motionButtons}><button onClick={()=>setPlaying(value=>!value)} disabled={reducedMotion} aria-label={playing&&!reducedMotion?"暂停环游":"开启环游"} aria-pressed={playing&&!reducedMotion}>{playing&&!reducedMotion?<Pause size={16}/>:<Play size={16}/>}<span>{reducedMotion?"简化动效":playing?"暂停":"播放"}</span></button><button onClick={reset} aria-label="重置场景"><RotateCcw size={16}/><span>重置</span></button></div>
-          </div>
+          <SculptedWorld reducedMotion={reducedMotion} active={active}/>
         </div>
 
       </section>

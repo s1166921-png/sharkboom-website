@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type PointerEvent } from "react";
+import { useEffect, useRef, useState } from "react";
 import s from "./studio.module.css";
 import * as T from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
@@ -9,15 +9,14 @@ import { WORLD_MODEL,WORLD_FALLBACK } from "./model-assets";
 import { fetchModel } from "./model-loader";
 import { WORLD_POSTER_DESKTOP,WORLD_POSTER_MOBILE } from "./poster-assets";
 
-type Props={playing:boolean;reducedMotion:boolean;active:number;resetKey:number;onExplore:()=>void};
+type Props={reducedMotion:boolean;active:number};
 
 /** A single physically lit 3D scene. Every visible character/object is volumetric geometry. */
-export function SculptedWorld({playing,reducedMotion,active,resetKey,onExplore}:Props){
+export function SculptedWorld({reducedMotion,active}:Props){
   const host=useRef<HTMLDivElement>(null),root=useRef<HTMLDivElement>(null);
   const [status,setStatus]=useState<"loading"|"ready"|"unavailable">("loading");
-  const settings=useRef({playing,reducedMotion,active,resetKey});
-  const pointer=useRef({down:false,lastX:0,lastY:0,x:0,y:0,yaw:0,pitch:0,travel:0,flourish:0});
-  useEffect(()=>{settings.current={playing,reducedMotion,active,resetKey};},[playing,reducedMotion,active,resetKey]);
+  const settings=useRef({reducedMotion,active});
+  useEffect(()=>{settings.current={reducedMotion,active};},[reducedMotion,active]);
 
   useEffect(()=>{
     const target=host.current;if(!target)return;
@@ -45,7 +44,7 @@ export function SculptedWorld({playing,reducedMotion,active,resetKey,onExplore}:
         const rim=new T.DirectionalLight(0x6aaaff,3);rim.position.set(6,5,-7);scene.add(rim);
         const ground=new T.Mesh(new T.PlaneGeometry(40,40),new T.ShadowMaterial({opacity:.14}));ground.rotation.x=-Math.PI/2;ground.position.y=-.61;ground.receiveShadow=true;scene.add(ground);
         let world:import("three").Group|null=null,mixer:import("three").AnimationMixer|null=null;
-        let time=0,previous=0,seenReset=settings.current.resetKey,cameraYaw=.54,cameraPitch=.57,globeAngle=-2.2,flourishTime=0,needsRender=true;
+        let time=0,previous=0,cameraYaw=.54,cameraPitch=.57,globeAngle=-2.2,needsRender=true;
         const waterUniform={value:0};
         const resources=new Set<import("three").BufferGeometry|import("three").Material>();
         const [buffer,{MeshoptDecoder}]=await Promise.all([modelBytes,decoderModule]);
@@ -69,7 +68,7 @@ export function SculptedWorld({playing,reducedMotion,active,resetKey,onExplore}:
             float caustic=pow(max(0.0,1.0-abs(c)*.9),7.0);
             diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.24,.72,.93),caustic*.28);`);
         };
-        mixer=new T.AnimationMixer(world);for(const clip of model.animations)mixer.clipAction(clip).play();
+        mixer=new T.AnimationMixer(world);for(const clip of model.animations)mixer.clipAction(clip).setLoop(T.LoopRepeat,Infinity).play();
         // Filament arcs and gliding beacons live in world space and occlude against the globe.
         const arcs=new T.Group();scene.add(arcs);const beacons: {mesh:import("three").Mesh;curve:import("three").CatmullRomCurve3;offset:number}[]=[];
         for(let j=0;j<3;j++){
@@ -91,19 +90,16 @@ export function SculptedWorld({playing,reducedMotion,active,resetKey,onExplore}:
         function frame(now:number){
           if(disposed)return;raf=requestAnimationFrame(frame);const dt=previous?Math.min((now-previous)/1000,.04):0;previous=now;
           if(!visible||document.hidden||lost)return;
-          const config=settings.current,p=pointer.current,moving=config.playing&&!config.reducedMotion&&!p.down;
-          if(seenReset!==config.resetKey){time=0;p.yaw=0;p.pitch=0;p.x=0;p.y=0;p.flourish=0;seenReset=config.resetKey;flourishTime=0;}
+          const config=settings.current,moving=!config.reducedMotion;
           if(moving)time+=dt;
-          const desiredYaw=.54+p.yaw+(config.reducedMotion?0:p.x*.045+Math.sin(time*.12)*.035),desiredPitch=.57+p.pitch+(config.reducedMotion?0:p.y*.025);
-          if(!needsRender&&!moving&&!p.down&&!p.flourish&&Math.abs(cameraYaw-desiredYaw)<.0001&&Math.abs(cameraPitch-desiredPitch)<.0001&&Math.abs(globeAngle-(-2.2+config.active*.64+time*.025))<.0001)return;
-          if(!config.reducedMotion&&p.flourish){flourishTime+=dt;if(flourishTime>2){p.flourish=0;flourishTime=0;}}
+          const desiredYaw=.54+(config.reducedMotion?0:Math.sin(time*.12)*.035),desiredPitch=.57;
+          if(!needsRender&&!moving&&Math.abs(cameraYaw-desiredYaw)<.0001&&Math.abs(cameraPitch-desiredPitch)<.0001&&Math.abs(globeAngle-(-2.2+config.active*.64+time*.025))<.0001)return;
           mixer!.setTime(time*(config.reducedMotion?0:1));waterUniform.value=time;
           const theta=.72+time*.16;
           const shipTheta=5.1+time*.085;
           const encounter=T.MathUtils.smoothstep(1-Math.acos(Math.cos(theta-shipTheta))/.7,0,1);
           shark.position.set(Math.sin(theta)*4.65,.53+Math.sin(time*1.8)*.055+encounter*1.5,Math.cos(theta)*4.65);
           shark.rotation.set(Math.sin(time*1.8)*.025,theta,Math.sin(time*1.8+.5)*.045);
-          if(p.flourish&&!config.reducedMotion){const t=flourishTime/2;shark.position.y+=Math.sin(t*Math.PI)*1.2;shark.rotation.x+=Math.sin(t*Math.PI*2)*.35;shark.rotation.z+=Math.sin(t*Math.PI)*.22;}
           vessel.position.set(Math.sin(shipTheta)*4.6,-.02+Math.sin(time*1.2)*.024,Math.cos(shipTheta)*4.6);vessel.rotation.set(Math.sin(time*.9)*.018,shipTheta,Math.sin(time*1.1)*.012);
           const desiredGlobe=-2.2+config.active*.64+time*.025;globeAngle+= (desiredGlobe-globeAngle)*(config.reducedMotion?1:Math.min(dt*2,1));globe.rotation.y=globeAngle;
           const ease=1-Math.exp(-dt*4);const yaw=desiredYaw;const pitch=desiredPitch;
@@ -113,7 +109,7 @@ export function SculptedWorld({playing,reducedMotion,active,resetKey,onExplore}:
           wakes.forEach((wake,i)=>{const isShip=i<6,k=i%6;const angle=(isShip?shipTheta:theta)-k*.055-.08;const r=isShip?4.6:4.65;wake.position.set(Math.sin(angle)*r,-.075,Math.cos(angle)*r);wake.rotation.z=-angle;wake.scale.setScalar(.6+k*.35);});
           bubbles.children.forEach((b,i)=>{const a=theta-.18-i*.027;b.position.set(Math.sin(a)*4.65,.12+(Math.sin(time*2+i)*.5+.5)*.3,Math.cos(a)*4.65);});
           renderer.render(scene,camera);needsRender=false;
-          if(root.current){root.current.dataset.phase=time.toFixed(2);root.current.dataset.yaw=p.yaw.toFixed(2);root.current.setAttribute("aria-valuenow",String(Math.round(((cameraYaw*180/Math.PI)%360+360)%360)));}
+          if(root.current)root.current.dataset.phase=time.toFixed(2);
         }
         // Reveal only a complete rendered first frame; no mandatory intro/dolly delay.
         frame(0);
@@ -124,16 +120,11 @@ export function SculptedWorld({playing,reducedMotion,active,resetKey,onExplore}:
     void boot();return()=>{disposed=true;abort.abort();cancelAnimationFrame(raf);visibility.disconnect();cleanup?.();};
   },[]);
 
-  function move(event:PointerEvent<HTMLDivElement>){const p=pointer.current,rect=event.currentTarget.getBoundingClientRect();p.x=(event.clientX-rect.left)/rect.width*2-1;p.y=(event.clientY-rect.top)/rect.height*2-1;if(p.down){const dx=event.clientX-p.lastX,dy=event.clientY-p.lastY;p.yaw-=dx*.005;p.pitch=Math.max(-.22,Math.min(.4,p.pitch+dy*.002));p.travel+=Math.abs(dx)+Math.abs(dy);p.lastX=event.clientX;p.lastY=event.clientY;if(p.travel>5)onExplore();}}
-  return <div className={s.world} ref={root} data-testid="sculpted-world" data-visual="complete" data-renderer={status==="ready"?"webgl-3d":status} data-playing={playing&&!reducedMotion} role={status==="ready"?"slider":"img"} aria-label={status==="ready"?"拖动旋转立体海洋世界":"鲨保保卡通鲨鱼、货轮与环球海洋场景"} aria-valuemin={status==="ready"?0:undefined} aria-valuemax={status==="ready"?360:undefined} aria-valuenow={status==="ready"?31:undefined} aria-describedby="sculpted-scene-help" tabIndex={status==="ready"?0:-1}
-    onPointerDown={e=>{if(status!=="ready")return;const p=pointer.current;p.down=true;p.lastX=e.clientX;p.lastY=e.clientY;p.travel=0;e.currentTarget.setPointerCapture(e.pointerId);}}
-    onPointerMove={move} onPointerUp={()=>{const p=pointer.current;p.down=false;if(p.travel<5&&!reducedMotion)p.flourish=1;}} onPointerCancel={()=>{pointer.current.down=false;}} onPointerLeave={()=>{if(!pointer.current.down){pointer.current.x=0;pointer.current.y=0;}}}
-    onKeyDown={e=>{if(e.key==="ArrowLeft"||e.key==="ArrowRight"){e.preventDefault();pointer.current.yaw+=e.key==="ArrowLeft"?-.2:.2;onExplore();}if(e.key==="ArrowUp"||e.key==="ArrowDown"){e.preventDefault();pointer.current.pitch=Math.max(-.22,Math.min(.4,pointer.current.pitch+(e.key==="ArrowUp"?.1:-.1)));onExplore();}}}>
+  return <div className={s.world} ref={root} data-testid="sculpted-world" data-visual="complete" data-renderer={status==="ready"?"webgl-3d":status} data-playing={!reducedMotion} role="img" aria-label="卡通鲨鱼自动循环游动的立体海洋场景">
     <picture className={s.poster}><source media="(max-width:760px)" srcSet={WORLD_POSTER_MOBILE}/><img src={WORLD_POSTER_DESKTOP} width="760" height="383" alt="" aria-hidden="true" loading="eager" fetchPriority="high" decoding="sync" draggable={false}/></picture>
     <div className={s.canvas} ref={host}/>
     {status==="unavailable"&&<p className={s.srOnly} role="status">当前设备显示完整场景预览，可继续查看保险方案。</p>}
     <div className={s.coordinate} aria-hidden="true"><i/> SHARKBOOM OCEAN <span>31° N / 121° E</span></div>
     <span className={s.sceneCaption} aria-hidden="true">一只鲨，一起出海。</span>
-    <p id="sculpted-scene-help" className={s.srOnly}>拖动改变三维视角，方向键调整镜头，点击场景与小鲨互动。可在下方暂停动画。</p>
   </div>;
 }
