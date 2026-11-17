@@ -8,6 +8,7 @@ import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { WORLD_MODEL,WORLD_FALLBACK } from "./model-assets";
 import { fetchModel } from "./model-loader";
 import { WORLD_POSTER_DESKTOP,WORLD_POSTER_MOBILE } from "./poster-assets";
+import { sitePath } from "../site-path";
 
 type Props={reducedMotion:boolean;active:number};
 
@@ -24,7 +25,7 @@ export function SculptedWorld({reducedMotion,active}:Props){
     let disposed=false,raf=0,visible=true,cleanup:(()=>void)|undefined;
     const startedAt=performance.now(),abort=new AbortController();
     // Begin the request immediately; HTML preload normally has already started it.
-    const modelBytes=fetchModel(WORLD_MODEL,WORLD_FALLBACK,abort.signal);
+    const modelBytes=fetchModel(sitePath(WORLD_MODEL),sitePath(WORLD_FALLBACK),abort.signal);
     // Keep WASM decoding browser-only; do not initialize it in server rendering.
     const decoderModule=import("meshoptimizer/decoder");void decoderModule.catch(()=>{});
     void modelBytes.catch(()=>{});

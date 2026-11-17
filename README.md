@@ -1,12 +1,13 @@
 ﻿# 鲨保保官网首页风格提案
 
-本项目提供三个可切换的响应式首页方向，共用已确认的五类险种内容。
+本项目提供四个可切换的响应式首页方向，共用已确认的五类险种内容。
 
-- `/` 蓝白专业：品牌盾牌、清晰卡片与咨询导向。
+- `/`、`/motion-3d` 鲨鲨航海：真实 3D 卡通鲨鱼自动循环游动，可调整视角。
+- `/professional` 蓝白专业：品牌盾牌、清晰卡片与咨询导向。
 - `/ocean` 深海科技：深色全球航线、编号列表与国际化表达。
 - `/editorial` 温暖编辑：米白留白、衬线标题与港口摄影。
 
-三个页面均包含险种介绍弹窗、咨询方式预览、常见问题折叠、移动导航及风格比较。
+保留三个原始模板；旧版环球护航已移除。关于品牌区域使用原始静态 Logo，五类险种入口位于保障方案标题下方。
 原始 Logo 从用户提供的附件恢复，保持原图；品牌主色为 #0055BB，辅助色为 #E64A20。
 
 此版本仅用于风格预览，不采集客户信息，不办理投保，未接入真实联系方式、渠道或内容管理后台。
@@ -32,4 +33,19 @@ npm run build
 
 ## 发布
 
-保留 Sites 的 vinext / Cloudflare Worker 构建结构；当前预览站保持仅所有者可访问。
+网站地址：https://s1166921-png.github.io/sharkboom-website/
+
+代码仓库：https://github.com/s1166921-png/sharkboom-website
+
+推送到 `main` 后，GitHub Actions 自动安装依赖、导出静态页面并部署到 GitHub Pages。仓库 Settings → Pages 的来源为 GitHub Actions。首次发布通常需要等待工作流完成。
+
+本地生成同样的静态文件：
+
+```sh
+npm ci
+npm run build:pages
+```
+
+输出在 `out/`。`GITHUB_REPOSITORY`、`GITHUB_PAGES_BASE_PATH` 和 `GITHUB_PAGES_ORIGIN` 可覆盖仓库名称、子路径与站点来源；Logo、模板导航、字体和 3D 模型均适配子路径。
+
+原 Sites 构建保持兼容：`npm run build` 仍生成 vinext / Cloudflare Worker 版本，原预览站访问权限保持不变。

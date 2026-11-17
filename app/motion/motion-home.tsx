@@ -7,6 +7,7 @@ import { motionProducts as products, type MotionProduct } from "./products";
 import s from "./motion.module.css";
 import { SculptedWorld } from "../motion-3d/world";
 import t from "../motion-3d/studio.module.css";
+import { sitePath } from "../site-path";
 
 const reducedQuery="(prefers-reduced-motion: reduce)";
 function subscribeMotion(callback:()=>void){const media=window.matchMedia(reducedQuery);media.addEventListener("change",callback);return()=>media.removeEventListener("change",callback);}
@@ -61,10 +62,10 @@ export function MotionHome(){
 
   return <div className={`${s.site} ${t.studio}`} id="motion-top">
     <a className={s.skipLink} href="#motion-main">跳到主要内容</a>
-    <div className={s.previewBar}><span>鲨保保 · 首页风格预览</span><nav aria-label="切换网页风格"><a href="/professional">蓝白专业</a><a href="/ocean">深海科技</a><a href="/editorial">温暖编辑</a><a href="/motion-3d" aria-current="page">鲨鲨航海 <small>3D · 最新</small></a></nav><span className={s.previewMark}>04 / SCULPTED WORLD</span></div>
+    <div className={s.previewBar}><span>鲨保保 · 首页风格预览</span><nav aria-label="切换网页风格"><a href={sitePath("/professional")}>蓝白专业</a><a href={sitePath("/ocean")}>深海科技</a><a href={sitePath("/editorial")}>温暖编辑</a><a href={sitePath("/motion-3d")} aria-current="page">鲨鲨航海 <small>3D · 最新</small></a></nav><span className={s.previewMark}>04 / SCULPTED WORLD</span></div>
     <header className={s.header}>
       <div className={s.navInner}>
-        <a href="#motion-top" className={s.brand} aria-label="鲨保保首页"><img src="/logo.png" width="763" height="341" alt="SharkBoom 鲨保保"/></a>
+        <a href="#motion-top" className={s.brand} aria-label="鲨保保首页"><img src={sitePath("/logo.png")} width="763" height="341" alt="SharkBoom 鲨保保"/></a>
         <nav className={`${s.navigation} ${menu?s.navigationOpen:""}`} aria-label="主导航"><a href="#solutions" onClick={()=>setMenu(false)}>保险方案</a><a href="#advantages" onClick={()=>setMenu(false)}>服务优势</a><a href="#about" onClick={()=>setMenu(false)}>关于鲨保保</a></nav>
         <button className={s.contactButton} onClick={talk}>联系我们 <ArrowUpRight size={17}/></button>
         <button className={s.menuButton} onClick={()=>setMenu(value=>!value)} aria-label={menu?"收起导航":"展开导航"} aria-expanded={menu} aria-controls="motion-mobile-menu">{menu?<X/>:<Menu/>}</button>
@@ -120,7 +121,7 @@ export function MotionHome(){
 
       <section id="about" className={s.about}>
         <div className={`${s.contentWidth} ${s.aboutGrid}`}>
-          <div className={`${s.aboutArt} ${t.aboutLogo}`} data-motion-reveal><img src="/logo.png" alt="SharkBoom 鲨保保品牌 Logo" width="763" height="341" loading="lazy"/><span>ALWAYS MOVING<br/><b>FORWARD.</b></span></div>
+          <div className={`${s.aboutArt} ${t.aboutLogo}`} data-motion-reveal><img src={sitePath("/logo.png")} alt="SharkBoom 鲨保保品牌 Logo" width="763" height="341" loading="lazy"/><span>ALWAYS MOVING<br/><b>FORWARD.</b></span></div>
           <div data-motion-reveal><p className={s.eyebrow}>03 / MEET SHARKBOOM</p><h2>专注跨境，<br/>也专注每一个你。</h2><p className={s.aboutLead}>鲨保保，面向中国跨境卖家的<br/>保险与保函服务伙伴。</p><p className={s.aboutBody}>从产品责任到跨境运输，从知识产权风险到欧洲税务担保与贸易收款，我们围绕实际经营需求，协助你了解保障、准备资料、对接服务。</p><button className={s.inlineLink} onClick={talk}>认识你的服务伙伴 <ArrowUpRight size={19}/></button></div>
         </div>
       </section>
@@ -140,7 +141,7 @@ export function MotionHome(){
       <section className={s.finalCta}><div className={s.contentWidth}><p className={s.eyebrow}>THE WORLD IS WAITING.</p><h2>出发，有备而行。</h2><p>下一段跨境旅程，从一次清楚的沟通开始。</p><button className={s.lightButton} onClick={talk}>联系鲨保保 <ArrowUpRight size={21}/></button></div></section>
     </main>
 
-    <footer className={s.footer}><div className={s.footerTop}><a href="#motion-top" className={s.brand}><img src="/logo.png" width="763" height="341" alt="SharkBoom 鲨保保"/></a><p>跨境保险与保函服务<br/><small>PROTECTION FOR YOUR NEXT CHAPTER.</small></p><a href="https://www.usaeu.com/" target="_blank" rel="noreferrer">返回美鸥官网 <ArrowUpRight size={15}/></a><a href="#motion-top">回到顶部 <ArrowUpRight size={15}/></a></div><div className={s.footerBottom}><span>© {new Date().getFullYear()} SharkBoom 鲨保保</span><span>鲨鲨航海 · 3D 设计预览</span><span>本预览暂未接入真实咨询与投保渠道</span></div></footer>
+    <footer className={s.footer}><div className={s.footerTop}><a href="#motion-top" className={s.brand}><img src={sitePath("/logo.png")} width="763" height="341" alt="SharkBoom 鲨保保"/></a><p>跨境保险与保函服务<br/><small>PROTECTION FOR YOUR NEXT CHAPTER.</small></p><a href="https://www.usaeu.com/" target="_blank" rel="noreferrer">返回美鸥官网 <ArrowUpRight size={15}/></a><a href="#motion-top">回到顶部 <ArrowUpRight size={15}/></a></div><div className={s.footerBottom}><span>© {new Date().getFullYear()} SharkBoom 鲨保保</span><span>鲨鲨航海 · 3D 设计预览</span><span>本预览暂未接入真实咨询与投保渠道</span></div></footer>
 
     {detail&&<Dialog title="了解保障方向" onClose={()=>setDetail(null)}><div className={s.dialogBody}><p className={s.eyebrow}>{detail.code} / {detail.en}</p><h2>{detail.name}</h2><p className={s.dialogIntro}>{detail.description}</p><section><h3>适合谁了解</h3><p>{detail.audience}</p></section><section><h3>可以协助你了解</h3><ul>{detail.points.map(point=><li key={point}><Check size={16}/>{point}</li>)}</ul></section><section><h3>通常需要准备</h3><p>{detail.materials}</p></section><p className={s.dialogNote}>具体适用条件、保障范围及办理资料，以确认的方案和正式条款为准。</p><button className={s.primary} onClick={talk}>咨询投保方案 <ArrowUpRight size={18}/></button></div></Dialog>}
     {contact&&<Dialog title="联系鲨保保" onClose={()=>setContact(false)}><div className={s.dialogBody}><p className={s.eyebrow}>YOUR NEXT STEP STARTS HERE</p><h2>聊聊你的<br/>跨境保障需求。</h2><p className={s.dialogIntro}>正式官网将接入以下联系渠道。<br/>本页为设计预览，联系方式与投保渠道待配置。</p><div className={s.contactOptions}>{[{icon:MessageCircle,name:"企业微信",text:"扫码添加服务人员"},{icon:Phone,name:"电话咨询",text:"直接沟通业务需求"},{icon:Mail,name:"电子邮箱",text:"发送资料与咨询问题"}].map(item=><div key={item.name}><item.icon size={22}/><span><b>{item.name}</b><small>{item.text}</small></span><em>待配置</em></div>)}</div><button className={s.primary} onClick={()=>{setContact(false);document.getElementById("solutions")?.scrollIntoView({behavior:reducedMotion?"instant":"smooth"});}}>先了解保障方案 <ArrowRight size={18}/></button></div></Dialog>}

@@ -5,6 +5,7 @@ import s from "./studio.module.css";
 import { MASCOT_MODEL,MASCOT_FALLBACK } from "./model-assets";
 import { fetchModel } from "./model-loader";
 import { MASCOT_POSTER } from "./poster-assets";
+import { sitePath } from "../site-path";
 
 /** Lazy second view of the SAME exported character, with an independent turntable. */
 export function MascotPortrait({reducedMotion}:{reducedMotion:boolean}){
@@ -15,7 +16,7 @@ export function MascotPortrait({reducedMotion}:{reducedMotion:boolean}){
     const element=host.current;if(!element)return;
     let disposed=false,visible=false,started=false,raf=0,release:(()=>void)|undefined;
     async function start(){
-      const bytes=fetchModel(MASCOT_MODEL,MASCOT_FALLBACK);void bytes.catch(()=>{});
+      const bytes=fetchModel(sitePath(MASCOT_MODEL),sitePath(MASCOT_FALLBACK));void bytes.catch(()=>{});
       const [T,{GLTFLoader},{RoomEnvironment},{MeshoptDecoder}]=await Promise.all([import("three"),import("three/addons/loaders/GLTFLoader.js"),import("three/addons/environments/RoomEnvironment.js"),import("meshoptimizer/decoder")]);
       if(disposed)return;
       const renderer=new T.WebGLRenderer({alpha:true,antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1;
