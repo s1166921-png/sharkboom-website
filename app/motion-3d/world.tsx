@@ -98,19 +98,19 @@ export function SculptedWorld({reducedMotion,active}:Props){
           const desiredYaw=.54+view.current.yaw+(config.reducedMotion?0:Math.sin(time*.12)*.035),desiredPitch=.57+view.current.pitch;
           if(!needsRender&&!moving&&Math.abs(cameraYaw-desiredYaw)<.0001&&Math.abs(cameraPitch-desiredPitch)<.0001&&Math.abs(globeAngle-(-2.2+config.active*.64+time*.025))<.0001)return;
           mixer!.setTime(time*(config.reducedMotion?0:1));waterUniform.value=time;
-          const theta=.72+time*.16;
-          const shipTheta=5.1+time*.085;
-          const encounter=T.MathUtils.smoothstep(1-Math.acos(Math.cos(theta-shipTheta))/.7,0,1);
-          shark.position.set(Math.sin(theta)*4.65,.53+Math.sin(time*1.8)*.055+encounter*1.5,Math.cos(theta)*4.65);
+          // Share the vessel's route and pace; preserve the opening composition with the shark ahead.
+          const voyageRadius=4.6,shipTheta=5.1+time*.085;
+          const theta=shipTheta+(.72-5.1+Math.PI*2);
+          shark.position.set(Math.sin(theta)*voyageRadius,.53+Math.sin(time*1.8)*.055,Math.cos(theta)*voyageRadius);
           shark.rotation.set(Math.sin(time*1.8)*.025,theta,Math.sin(time*1.8+.5)*.045);
-          vessel.position.set(Math.sin(shipTheta)*4.6,-.02+Math.sin(time*1.2)*.024,Math.cos(shipTheta)*4.6);vessel.rotation.set(Math.sin(time*.9)*.018,shipTheta,Math.sin(time*1.1)*.012);
+          vessel.position.set(Math.sin(shipTheta)*voyageRadius,-.02+Math.sin(time*1.2)*.024,Math.cos(shipTheta)*voyageRadius);vessel.rotation.set(Math.sin(time*.9)*.018,shipTheta,Math.sin(time*1.1)*.012);
           const desiredGlobe=-2.2+config.active*.64+time*.025;globeAngle+= (desiredGlobe-globeAngle)*(config.reducedMotion?1:Math.min(dt*2,1));globe.rotation.y=globeAngle;
           const ease=1-Math.exp(-dt*4);const yaw=desiredYaw;const pitch=desiredPitch;
           cameraYaw+=(yaw-cameraYaw)*ease;cameraPitch+=(pitch-cameraPitch)*ease;const distance=18.8;
           camera.position.set(Math.sin(cameraYaw)*Math.cos(cameraPitch)*distance,Math.sin(cameraPitch)*distance,Math.cos(cameraYaw)*Math.cos(cameraPitch)*distance);camera.lookAt(targetLook);
           beacons.forEach(({mesh,curve,offset})=>mesh.position.copy(curve.getPointAt((time*.055+offset)%1)));
-          wakes.forEach((wake,i)=>{const isShip=i<6,k=i%6;const angle=(isShip?shipTheta:theta)-k*.055-.08;const r=isShip?4.6:4.65;wake.position.set(Math.sin(angle)*r,-.075,Math.cos(angle)*r);wake.rotation.z=-angle;wake.scale.setScalar(.6+k*.35);});
-          bubbles.children.forEach((b,i)=>{const a=theta-.18-i*.027;b.position.set(Math.sin(a)*4.65,.12+(Math.sin(time*2+i)*.5+.5)*.3,Math.cos(a)*4.65);});
+          wakes.forEach((wake,i)=>{const isShip=i<6,k=i%6;const angle=(isShip?shipTheta:theta)-k*.055-.08;wake.position.set(Math.sin(angle)*voyageRadius,-.075,Math.cos(angle)*voyageRadius);wake.rotation.z=-angle;wake.scale.setScalar(.6+k*.35);});
+          bubbles.children.forEach((b,i)=>{const a=theta-.18-i*.027;b.position.set(Math.sin(a)*voyageRadius,.12+(Math.sin(time*2+i)*.5+.5)*.3,Math.cos(a)*voyageRadius);});
           renderer.render(scene,camera);needsRender=false;
           if(root.current){root.current.dataset.phase=time.toFixed(2);root.current.setAttribute("aria-valuenow",String(Math.round((((.54+view.current.yaw)*180/Math.PI)%360+360)%360)));}
         }
