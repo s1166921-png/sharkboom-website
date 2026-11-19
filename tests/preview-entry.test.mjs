@@ -10,8 +10,14 @@ test('the shared homepage opens the latest complete 3D preview',{skip:!origin},a
   assert.match(html,/data-testid="sculpted-world"[^>]*data-visual="complete"/,'Opening the shared root URL must show the latest scene');
 });
 
-test('the four retained designs remain reachable and the retired preview is removed',{skip:!origin},async()=>{
-  const pages=[['/professional','为每一次出海'],['/ocean','跨越边界'],['/editorial','跨境经营'],['/motion-3d','sculpted-world']];
+test('the selected 3D website has no template selector and the design archive remains reachable',{skip:!origin},async()=>{
+  for(const route of ['/','/motion-3d']){
+    const response=await fetch(origin+route);assert.equal(response.status,200);
+    const html=await response.text();
+    assert(html.includes('sculpted-world'));
+    assert(!html.includes('aria-label="切换网页风格"'));
+  }
+  const pages=[['/professional','为每一次出海'],['/ocean','跨越边界'],['/editorial','跨境经营']];
   for(const [path,identity] of pages){
     const response=await fetch(origin+path);
     assert.equal(response.status,200,`${path} remains available`);

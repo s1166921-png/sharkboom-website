@@ -6,7 +6,8 @@ import path from 'node:path';
 const repository=process.env.GITHUB_REPOSITORY ?? 's1166921-png/sharkboom-website';
 const [owner,name]=repository.split('/');
 const root=fileURLToPath(new URL('../',import.meta.url));
-const basePath=process.env.GITHUB_PAGES_BASE_PATH ?? (name===`${owner}.github.io`?'':`/${name}`);
+const standalone=process.env.STANDALONE_SITE==='true';
+const basePath=standalone?'':process.env.GITHUB_PAGES_BASE_PATH ?? (name===`${owner}.github.io`?'':`/${name}`);
 const pagesEnv={...process.env,GITHUB_PAGES:'true',GITHUB_PAGES_BASE_PATH:basePath,GITHUB_PAGES_ORIGIN:process.env.GITHUB_PAGES_ORIGIN ?? `https://${owner}.github.io`};
 const result=spawnSync(process.execPath,[fileURLToPath(new URL('../node_modules/vinext/dist/cli.js',import.meta.url)),'build'],{
   stdio:'inherit',
@@ -17,8 +18,9 @@ if(result.status!==0)process.exit(result.status ?? 1);
 // Export complete server-rendered documents with their embedded React payloads.
 // This avoids vinext beta's incomplete subdirectory prerendering on Windows.
 Object.assign(process.env,pagesEnv);
-const output=path.resolve(root,'out');
-if(path.dirname(output)!==path.resolve(root)||path.basename(output)!=='out')throw new Error('Unexpected export directory');
+const outputName=standalone?'out-server':'out';
+const output=path.resolve(root,outputName);
+if(path.dirname(output)!==path.resolve(root)||path.basename(output)!==outputName)throw new Error('Unexpected export directory');
 await rm(output,{recursive:true,force:true});
 await mkdir(output,{recursive:true});
 const client=path.join(root,'dist/client');
@@ -51,7 +53,7 @@ await normalizeCssPublicUrls(path.join(output,'_next'));
 const {startProdServer}=await import('vinext/server/prod-server');
 const {server,port}=await startProdServer({port:0,host:'127.0.0.1',outDir:path.join(root,'dist'),noCompression:true,silent:true});
 try{
-  for(const route of ['/','/professional/','/ocean/','/editorial/','/motion-3d/']){
+  for(const route of standalone?['/']:['/','/professional/','/ocean/','/editorial/','/motion-3d/']){
     const response=await fetch(`http://127.0.0.1:${port}${basePath}${route}`);
     if(!response.ok)throw new Error(`Cannot export ${route}: HTTP ${response.status}`);
     const html=await response.text();
@@ -67,4 +69,4 @@ try{
   server.closeAllConnections();
   await new Promise((resolve,reject)=>server.close(error=>error?reject(error):resolve()));
 }
-console.log('GitHub Pages static website ready in out/');
+console.log(`${standalone?'Standalone':'GitHub Pages'} static website ready in ${outputName}/`);
