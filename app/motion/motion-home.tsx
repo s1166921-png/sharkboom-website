@@ -2,7 +2,8 @@
 /* eslint-disable @next/next/no-html-link-for-pages -- Variant previews intentionally use full document navigation to isolate their runtimes. */
 
 import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
-import { ArrowDown, ArrowRight, ArrowUpRight, Check, ChevronDown, FileCheck2, Globe2, Headphones, Mail, Menu, MessageCircle, Phone, ShieldCheck, X } from "lucide-react";
+import { ArrowDown, ArrowRight, ArrowUpRight, Check, ChevronDown, FileCheck2, Globe2, Headphones, Menu, MessageCircle, ShieldCheck, X } from "lucide-react";
+import { ContactDetails, ContactLinks } from "../contact-details";
 import { motionProducts as products, type MotionProduct } from "./products";
 import s from "./motion.module.css";
 import { SculptedWorld } from "../motion-3d/world";
@@ -134,16 +135,16 @@ export function MotionHome(){
 
       <section className={s.faqSection}><div className={`${s.contentWidth} ${s.faqGrid}`}><div><p className={s.eyebrow}>A FEW GOOD QUESTIONS</p><h2>还有想了解的？</h2><button className={s.inlineLink} onClick={talk}>和我们聊聊 <ArrowUpRight size={18}/></button></div><div>{[
         {q:"还不确定适合哪个险种，可以先咨询吗？",a:"可以先说明经营平台、销售地区、产品类型与当前问题，由服务人员协助了解适合的保障方向，再沟通具体方案。"},
-        {q:"能从官网直接完成投保吗？",a:"官网提供险种介绍与咨询入口。已确认适用渠道后，可进入对应渠道办理。实际报价、核保、支付与出单由相应机构按正式流程处理。本设计预览暂未接入真实渠道。"},
+        {q:"能从官网直接完成投保吗？",a:"官网提供险种介绍与咨询入口。已确认适用渠道后，可进入对应渠道办理。实际报价、核保、支付与出单由相应机构按正式流程处理。在线投保渠道暂未接入，可先通过微信、电话或邮件联系我们。"},
         {q:"投保后遇到问题，可以获得哪些协助？",a:"可联系服务人员了解保单资料、续保安排，以及报案与理赔资料对接等事项。具体保险责任、赔付条件及处理流程以所选方案约定为准。"},
       ].map(item=><details key={item.q}><summary>{item.q}<ChevronDown size={17}/></summary><p>{item.a}</p></details>)}</div></div></section>
 
       <section className={s.finalCta}><div className={s.contentWidth}><p className={s.eyebrow}>THE WORLD IS WAITING.</p><h2>出发，有备而行。</h2><p>下一段跨境旅程，从一次清楚的沟通开始。</p><button className={s.lightButton} onClick={talk}>联系鲨保保 <ArrowUpRight size={21}/></button></div></section>
     </main>
 
-    <footer className={s.footer}><div className={s.footerTop}><a href="#motion-top" className={s.brand}><img src={sitePath("/logo.png")} width="763" height="341" alt="SharkBoom 鲨保保"/></a><p>跨境保险与保函服务<br/><small>PROTECTION FOR YOUR NEXT CHAPTER.</small></p><a href="https://www.usaeu.com/" target="_blank" rel="noreferrer">返回美鸥官网 <ArrowUpRight size={15}/></a><a href="#motion-top">回到顶部 <ArrowUpRight size={15}/></a></div><div className={s.footerBottom}><span>© {new Date().getFullYear()} SharkBoom 鲨保保</span><span>鲨鲨航海 · 3D 设计预览</span><span>本预览暂未接入真实咨询与投保渠道</span></div></footer>
+    <footer className={s.footer}><div className={s.footerTop}><a href="#motion-top" className={s.brand}><img src={sitePath("/logo.png")} width="763" height="341" alt="SharkBoom 鲨保保"/></a><p>跨境保险与保函服务<br/><small>PROTECTION FOR YOUR NEXT CHAPTER.</small></p><a href="https://www.usaeu.com/" target="_blank" rel="noreferrer">返回美鸥官网 <ArrowUpRight size={15}/></a><a href="#motion-top">回到顶部 <ArrowUpRight size={15}/></a></div><ContactLinks/><div className={s.footerBottom}><span>© {new Date().getFullYear()} SharkBoom 鲨保保</span><span>鲨鲨航海 · 3D 设计预览</span><span>支持微信、电话及邮件咨询 · 在线投保渠道待接入</span></div></footer>
 
     {detail&&<Dialog title="了解保障方向" onClose={()=>setDetail(null)}><div className={s.dialogBody}><p className={s.eyebrow}>{detail.code} / {detail.en}</p><h2>{detail.name}</h2><p className={s.dialogIntro}>{detail.description}</p><section><h3>适合谁了解</h3><p>{detail.audience}</p></section><section><h3>可以协助你了解</h3><ul>{detail.points.map(point=><li key={point}><Check size={16}/>{point}</li>)}</ul></section><section><h3>通常需要准备</h3><p>{detail.materials}</p></section><p className={s.dialogNote}>具体适用条件、保障范围及办理资料，以确认的方案和正式条款为准。</p><button className={s.primary} onClick={talk}>咨询投保方案 <ArrowUpRight size={18}/></button></div></Dialog>}
-    {contact&&<Dialog title="联系鲨保保" onClose={()=>setContact(false)}><div className={s.dialogBody}><p className={s.eyebrow}>YOUR NEXT STEP STARTS HERE</p><h2>聊聊你的<br/>跨境保障需求。</h2><p className={s.dialogIntro}>正式官网将接入以下联系渠道。<br/>本页为设计预览，联系方式与投保渠道待配置。</p><div className={s.contactOptions}>{[{icon:MessageCircle,name:"企业微信",text:"扫码添加服务人员"},{icon:Phone,name:"电话咨询",text:"直接沟通业务需求"},{icon:Mail,name:"电子邮箱",text:"发送资料与咨询问题"}].map(item=><div key={item.name}><item.icon size={22}/><span><b>{item.name}</b><small>{item.text}</small></span><em>待配置</em></div>)}</div><button className={s.primary} onClick={()=>{setContact(false);document.getElementById("solutions")?.scrollIntoView({behavior:reducedMotion?"instant":"smooth"});}}>先了解保障方案 <ArrowRight size={18}/></button></div></Dialog>}
+    {contact&&<Dialog title="联系鲨保保" onClose={()=>setContact(false)}><div className={s.dialogBody}><p className={s.eyebrow}>YOUR NEXT STEP STARTS HERE</p><h2>聊聊你的<br/>跨境保障需求。</h2><p className={s.dialogIntro}>联系鲨保保苏苏，沟通你的经营场景与保障需求。</p><ContactDetails/><button className={s.primary} onClick={()=>{setContact(false);document.getElementById("solutions")?.scrollIntoView({behavior:reducedMotion?"instant":"smooth"});}}>先了解保障方案 <ArrowRight size={18}/></button></div></Dialog>}
   </div>;
 }
