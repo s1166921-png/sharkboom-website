@@ -15,12 +15,15 @@
     "db:generate": "drizzle-kit generate",
     "assets:optimize": "node assets/3d/optimize-world.mjs",
     "test:scene": "node --test tests/scene-loading.test.mjs",
-    "test:intake": "node --test tests/intake-workbook.test.mjs"
+    "test:intake": "node --test tests/intake-workbook.test.mjs",
+    "test:orders": "node --test tests/orders.test.mjs tests/order-http.test.mjs tests/payments.test.mjs"
   },
   "dependencies": {
+    "alipay-sdk": "4.14.0",
     "drizzle-orm": "0.45.2",
     "lucide-react": "^1.72.0",
     "meshoptimizer": "^1.3.0",
+    "qrcode": "1.5.4",
     "react": "19.2.6",
     "react-dom": "19.2.6",
     "three": "0.187.0"
@@ -53,5 +56,10 @@
     "vite": "8.0.13",
     "wrangler": "4.92.0"
   },
-  "type": "module"
+  "type": "module",
+  "overrides": {
+    "urllib": {
+      "undici": "7.30.1"
+    }
+  }
 }

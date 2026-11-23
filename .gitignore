@@ -39,3 +39,8 @@ yarn-error.log*
 /.wrangler/
 /outputs/
 /work/
+/server/node_modules/
+*.db
+*.db-wal
+*.db-shm
+*.key

@@ -1,0 +1,1 @@
+{"name":"sharkboom-order-service","version":"1.0.0","private":true,"type":"module","engines":{"node":">=22.16"},"dependencies":{"alipay-sdk":"4.14.0","qrcode":"1.5.4"},"overrides":{"urllib":{"undici":"7.30.1"}}}

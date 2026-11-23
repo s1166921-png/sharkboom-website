@@ -1,0 +1,34 @@
+[Unit]
+Description=SharkBoom insurance order service
+After=network.target
+
+[Service]
+Type=simple
+User=sharkboom
+Group=sharkboom
+WorkingDirectory=/opt/sharkboom-orders/current
+ExecStart=/usr/bin/node server/main.mjs
+Environment=NODE_ENV=production
+Environment=PORT=3198
+Environment=SHARK_CONFIG=/etc/sharkboom/config.json
+Environment=SHARK_DATA_KEY=/etc/sharkboom/data.key
+Environment=SHARK_DATA_DIR=/var/lib/sharkboom
+Restart=on-failure
+RestartSec=5
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/sharkboom
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+MemoryMax=384M
+TasksMax=64
+LimitNOFILE=4096
+
+[Install]
+WantedBy=multi-user.target

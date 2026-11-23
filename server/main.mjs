@@ -1,0 +1,14 @@
+import {readFileSync,mkdirSync,chmodSync} from 'node:fs';
+import path from 'node:path';
+import {createApp} from './app.mjs';
+const directory=process.env.SHARK_DATA_DIR||'/var/lib/sharkboom';
+mkdirSync(directory,{recursive:true,mode:0o700});
+const settings=JSON.parse(readFileSync(process.env.SHARK_CONFIG||'/etc/sharkboom/config.json','utf8'));
+const key=Buffer.from(readFileSync(process.env.SHARK_DATA_KEY||'/etc/sharkboom/data.key','utf8').trim(),'hex');
+const config={...settings,dbFile:path.join(directory,'orders.db'),dataKey:key,secureCookies:true};
+if(process.env.SHARK_LOCAL_TEST==='true')config.secureCookies=false;
+const app=await createApp(config);
+chmodSync(config.dbFile,0o600);
+app.server.listen(Number(process.env.PORT||3198),'127.0.0.1',()=>console.log('SharkBoom order service ready'));
+let running=false;const timer=setInterval(async()=>{if(running)return;running=true;try{await app.payments.reconcile();}catch{console.error('Payment reconciliation needs attention');}finally{running=false;}},60000);timer.unref();
+for(const signal of ['SIGTERM','SIGINT'])process.on(signal,()=>{clearInterval(timer);app.server.close(()=>{app.store.close();process.exit(0);});setTimeout(()=>process.exit(1),15000).unref();});

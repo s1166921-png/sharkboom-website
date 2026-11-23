@@ -27,6 +27,7 @@ jobs:
       - uses: actions/configure-pages@v5
       - run: npm ci
       - run: npm run test:intake
+      - run: npm run test:orders
       - run: npm run build:pages
       - run: node --test tests/github-pages.test.mjs
       - uses: actions/upload-pages-artifact@v4
