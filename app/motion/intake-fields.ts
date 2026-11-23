@@ -1,0 +1,102 @@
+export type IntakeCode = "VIES" | "CGL" | "TRO" | "CARGO";
+export type IntakeValues = Record<string, string>;
+export type IntakeField = {
+  key: string;
+  label: string;
+  type?: "text" | "email" | "tel" | "date" | "textarea" | "select";
+  required?: boolean;
+  placeholder?: string;
+  options?: readonly string[];
+  hint?: string;
+};
+export type IntakeGroup = { title: string; fields: readonly IntakeField[] };
+
+export const intakeNotice = "导出表格仅用于信息收集，不直接完成投保，所有投保需要经过鲨保保人工核保，承保、保费、出单以业务人员沟通及保险公司核保结果为准。";
+
+const company: IntakeGroup = {
+  title: "企业与联系信息",
+  fields: [
+    { key: "companyName", label: "客户公司名称", required: true, placeholder: "请填写营业执照上的公司全称" },
+    { key: "companyEnglish", label: "公司英文名称", placeholder: "如有，请按企业正式资料填写" },
+    { key: "contactName", label: "联系人", required: true },
+    { key: "phone", label: "联系电话", type: "tel", required: true, placeholder: "手机号或含区号的联系电话" },
+    { key: "email", label: "联系邮箱", type: "email", placeholder: "用于后续资料对接" },
+    { key: "wechat", label: "联系微信", placeholder: "选填，方便服务人员对接" },
+  ],
+};
+const notes: IntakeGroup = { title: "补充说明", fields: [{ key: "notes", label: "其他需求或说明", type: "textarea", placeholder: "可说明计划办理时间、需要确认的问题等" }] };
+
+export const intakePlans: Record<IntakeCode, { name: string; fileLabel: string; intro: string; materials: string; groups: readonly IntakeGroup[] }> = {
+  VIES: {
+    name: "意大利 VIES 保函", fileLabel: "VIES保函",
+    intro: "先整理企业、税号及税务代表信息，便于服务人员核实适用条件与出函安排。",
+    materials: "后续通常需营业执照、意大利税号与税务代表资料等，由服务人员按核验要求另行收集。",
+    groups: [company, { title: "VIES 保函需求", fields: [
+      { key: "registrationNumber", label: "企业注册号／统一社会信用代码" },
+      { key: "registeredAddress", label: "企业注册地址", type: "textarea" },
+      { key: "italianVat", label: "意大利 VAT 税号", placeholder: "如已有税号，请填写；尚未取得可留空" },
+      { key: "taxRepresentative", label: "意大利税务代表", placeholder: "税代名称及对接信息，如已确定" },
+      { key: "viesStatus", label: "目前 VIES 状态", type: "select", options: ["计划申请", "已登记，需办理担保", "不确定，需协助核实"] },
+      { key: "guaranteeAmount", label: "拟申请担保金额（欧元）", placeholder: "例如：50000，最终按适用要求确认" },
+      { key: "guaranteePeriod", label: "拟申请担保期限", placeholder: "例如：36 个月，最终按适用要求确认" },
+      { key: "desiredStart", label: "期望办理／生效日期", type: "date" },
+    ] }, notes],
+  },
+  CGL: {
+    name: "产品责任险", fileLabel: "产品责任险",
+    intro: "围绕经营平台、产品品类与销售地区收集信息，便于核对责任保障及 COI 要求。",
+    materials: "后续通常需营业执照、在售产品清单、店铺主体与后台注册或税务资料等。销售与经营信息请如实填写。",
+    groups: [company, { title: "平台与产品信息", fields: [
+      { key: "platforms", label: "经营平台", required: true, placeholder: "例如：Amazon、Wayfair、Walmart，可填写多个" },
+      { key: "storeName", label: "店铺名称／被保险人名称", required: true },
+      { key: "storeUrl", label: "店铺链接", placeholder: "选填" },
+      { key: "salesRegions", label: "销售国家／站点", required: true, placeholder: "例如：美国、加拿大" },
+      { key: "productCategories", label: "在售产品与品类", type: "textarea", required: true, placeholder: "请说明主要商品、用途与品类" },
+      { key: "annualSales", label: "年度实际／预计销售额及币种", placeholder: "例如：预计年度销售额 200000 USD" },
+      { key: "liabilityLimit", label: "期望责任限额", placeholder: "例如：100 万美元，或按平台要求确认" },
+      { key: "platformRequirements", label: "平台特殊要求／附加被保险人", type: "textarea", placeholder: "如已收到平台通知，可摘录相关要求" },
+      { key: "claimsHistory", label: "以往索赔／事故情况", type: "select", options: ["无", "有，另行提供说明", "待核实"] },
+      { key: "desiredStart", label: "期望保障生效日期", type: "date" },
+    ] }, notes],
+  },
+  TRO: {
+    name: "TRO 侵权诉讼保险", fileLabel: "TRO侵权险",
+    intro: "整理店铺、产品与风险情况，交由服务人员确认风控授权、承保条件及可选方案。",
+    materials: "后续按方案核实店铺、Listing、风控授权与风险整改资料。填写本表不会启用风控系统，也不会自动生效承保。",
+    groups: [company, { title: "店铺与侵权风险信息", fields: [
+      { key: "platform", label: "经营平台", type: "select", required: true, options: ["Amazon", "其他平台，需确认是否适用"] },
+      { key: "storeName", label: "店铺名称", required: true },
+      { key: "storeUrl", label: "店铺链接／卖家 ID" },
+      { key: "salesRegions", label: "经营国家／站点", required: true },
+      { key: "productCategories", label: "主要销售品类", type: "textarea", required: true },
+      { key: "asins", label: "需要关注的 ASIN", type: "textarea", placeholder: "选填，可按行填写；全店铺需求可在备注中说明" },
+      { key: "riskDetection", label: "现有侵权检测情况", type: "select", options: ["尚未检测", "已检测，有风险概览", "已按 ASIN 检测，有报告", "待沟通"] },
+      { key: "troHistory", label: "是否已收到 TRO／侵权通知", type: "select", required: true, options: ["未收到", "已收到，需另行评估", "待核实"] },
+      { key: "riskAuthorization", label: "风控系统授权安排", type: "select", options: ["可配合授权，需说明流程", "尚未确定，先沟通"] },
+      { key: "preferredPlan", label: "期望保障额度／方案", placeholder: "未确定可留空，由服务人员协助沟通" },
+    ] }, notes],
+  },
+  CARGO: {
+    name: "国际货运险", fileLabel: "国际货运险",
+    intro: "按货物、运输链路及保障终点收集信息，便于确认本批货物或预约统保需求。",
+    materials: "后续通常需商业发票、装箱单、提单／运单与企业资料；具体资料由服务人员按方案确认。",
+    groups: [company, { title: "货物与运输信息", fields: [
+      { key: "goodsName", label: "货物品名／主要品类", required: true },
+      { key: "goodsValue", label: "货物申报价值", required: true, placeholder: "请输入货值，与下方币种对应" },
+      { key: "currency", label: "货值币种", type: "select", required: true, options: ["USD 美元", "EUR 欧元", "CNY 人民币", "其他，请备注"] },
+      { key: "quantityWeight", label: "件数、包装与重量", placeholder: "例如：20 箱，500 kg" },
+      { key: "transportMode", label: "运输方式", type: "select", required: true, options: ["海运", "空运", "铁路", "快递", "多式联运", "其他"] },
+      { key: "origin", label: "起运地／起运仓", required: true },
+      { key: "destination", label: "目的地／目的仓", required: true },
+      { key: "coverageEnd", label: "期望保障终点", type: "select", required: true, options: ["到港", "到仓", "上架", "全程", "尚未确定，需沟通"] },
+      { key: "shipmentMode", label: "投保方式", type: "select", options: ["单票投保", "月度预约统保", "大批量出货／咨询 API 对接", "待沟通"] },
+      { key: "departureDate", label: "预计起运日期", type: "date" },
+      { key: "shippingReference", label: "船名／航班／物流单号", placeholder: "如已取得，请填写" },
+      { key: "carrier", label: "货代／承运商名称" },
+    ] }, notes],
+  },
+};
+
+export function isIntakeCode(code: string): code is IntakeCode {
+  return Object.prototype.hasOwnProperty.call(intakePlans, code);
+}

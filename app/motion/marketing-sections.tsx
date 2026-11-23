@@ -2,13 +2,17 @@ import { ArrowRight, ArrowUpRight, Check, FileCheck2, FileText, Globe2, Headphon
 import { sitePath } from "../site-path";
 import type { MotionProduct } from "./products";
 import m from "./marketing.module.css";
+import { ProductActions } from "./product-actions";
+import type { IntakeCode } from "./intake-fields";
 
 type Props = {
   onProduct: (code: MotionProduct["code"]) => void;
   onContact: () => void;
+  onIntake: (code: IntakeCode) => void;
+  onRisk: () => void;
 };
 
-export function MarketingSections({ onProduct, onContact }: Props) {
+export function MarketingSections({ onProduct, onContact, onIntake, onRisk }: Props) {
   return <>
     <section id="advantages" className={`${m.section} ${m.products}`} aria-labelledby="benefits-title">
       <div className={m.width}>
@@ -18,6 +22,17 @@ export function MarketingSections({ onProduct, onContact }: Props) {
         </div>
 
         <div className={m.benefitGrid}>
+          <article className={`${m.card} ${m.vies}`} data-motion-reveal>
+            <div className={m.cardTop}><span>VIES / 意大利保险保函</span><Wallet size={23} strokeWidth={1.5}/></div>
+            <h3>为意大利市场做准备，<br/>也为周转资金留空间。</h3>
+            <p className={m.cardBody}>符合条件的企业可通过保险保函满足担保要求，减少直接提供全额保证金带来的现金占用。</p>
+            <div className={m.guaranteeVisual}><div><span>担保额度最低要求</span><strong>€50,000</strong></div><div><b>36<span>个月</span></b><span>最低担保期限</span></div></div>
+            <ul className={m.featureList}><li><Check/>核实企业适用条件，协助申请与资料递交</li><li><Check/>提前说清保费、担保安排及追偿责任</li></ul>
+            <p className={m.cardNote}>适用于符合意大利相关规定的非欧盟／非欧洲经济区企业。保函不免除纳税义务；保险公司履约垫付后，可依协议追偿。</p>
+            <button className={m.cardLink} onClick={() => onProduct("VIES")}>咨询企业适用条件 <ArrowUpRight size={19}/></button>
+            <ProductActions code="VIES" onIntake={onIntake} onRisk={onRisk} onContact={onContact}/>
+          </article>
+
           <article className={`${m.card} ${m.cgl}`} data-motion-reveal>
             <div className={m.cardTop}><span>CGL / 产品责任险</span><ShieldCheck size={23} strokeWidth={1.5}/></div>
             <h3>产品走向海外，<br/>保障与凭证一起备齐。</h3>
@@ -30,6 +45,18 @@ export function MarketingSections({ onProduct, onContact }: Props) {
             <ul className={m.featureList}><li><Check/>境内、境外企业主体均可咨询承保</li><li><Check/>按平台、站点与销售品类匹配保障条件</li></ul>
             <p className={m.cardNote}>面向 Amazon、Wayfair、Walmart、Home Depot 等平台经营场景；具体要求与凭证接受情况以平台审核为准。</p>
             <button className={m.cardLink} onClick={() => onProduct("CGL")}>查看责任保障与交付文件 <ArrowUpRight size={19}/></button>
+            <ProductActions code="CGL" onIntake={onIntake} onRisk={onRisk} onContact={onContact}/>
+          </article>
+
+          <article className={`${m.card} ${m.tro}`} data-motion-reveal>
+            <div className={m.cardTop}><span>TRO / 侵权诉讼保险</span><Scale size={23} strokeWidth={1.5}/></div>
+            <h3>把风险排查，<br/>放在收到 TRO 之前。</h3>
+            <p className={m.cardBody}>从店铺 Listing 风险监测，到符合条件的法律费用与赔偿责任保障，为非故意侵权风险提前准备。</p>
+            <div className={m.radarVisual}><div><Radar size={44} strokeWidth={1.1}/><strong>7<span>×</span>24</strong></div><p>店铺授权后，通过指定第三方平台<br/>提供全店铺风控监测与风险提示。</p></div>
+            <ul className={m.featureList}><li><Check/>关注外观专利、商标及版权侵权风险</li><li><Check/>指定专业机构或律师介入，协助案件处理</li></ul>
+            <p className={m.cardNote}>须满足非故意侵权、保险期间首次收到承保区域法院签发的 TRO 等条件；高风险 Listing 须整改并经确认后方可纳保，故意侵权不保。</p>
+            <button className={m.cardLink} onClick={() => onProduct("TRO")}>了解风控服务与费用保障 <ArrowUpRight size={19}/></button>
+            <ProductActions code="TRO" onIntake={onIntake} onRisk={onRisk} onContact={onContact}/>
           </article>
 
           <article className={`${m.card} ${m.cargo}`} data-motion-reveal>
@@ -44,27 +71,10 @@ export function MarketingSections({ onProduct, onContact }: Props) {
             <ul className={m.featureList}><li><Check/>单票投保、月度预约，适配不同出货节奏</li><li><Check/>可咨询按发票货值 110% 确定保险金额</li></ul>
             <p className={m.cardNote}>上架保障的等待期、索赔证明及赔付条件须按所选条款确认；保险金额不等于实际赔款，适用免赔与责任限额。</p>
             <button className={m.cardLink} onClick={() => onProduct("CARGO")}>找到适合这批货的保障 <ArrowUpRight size={19}/></button>
+            <ProductActions code="CARGO" onIntake={onIntake} onRisk={onRisk} onContact={onContact} dark/>
           </article>
 
-          <article className={`${m.card} ${m.tro}`} data-motion-reveal>
-            <div className={m.cardTop}><span>TRO / 侵权诉讼保险</span><Scale size={23} strokeWidth={1.5}/></div>
-            <h3>把风险排查，<br/>放在收到 TRO 之前。</h3>
-            <p className={m.cardBody}>从店铺 Listing 风险监测，到符合条件的法律费用与赔偿责任保障，为非故意侵权风险提前准备。</p>
-            <div className={m.radarVisual}><div><Radar size={44} strokeWidth={1.1}/><strong>7<span>×</span>24</strong></div><p>店铺授权后，通过指定第三方平台<br/>提供全店铺风控监测与风险提示。</p></div>
-            <ul className={m.featureList}><li><Check/>关注外观专利、商标及版权侵权风险</li><li><Check/>指定专业机构或律师介入，协助案件处理</li></ul>
-            <p className={m.cardNote}>须满足非故意侵权、保险期间首次收到承保区域法院签发的 TRO 等条件；高风险 Listing 须整改并经确认后方可纳保，故意侵权不保。</p>
-            <button className={m.cardLink} onClick={() => onProduct("TRO")}>了解风控服务与费用保障 <ArrowUpRight size={19}/></button>
-          </article>
 
-          <article className={`${m.card} ${m.vies}`} data-motion-reveal>
-            <div className={m.cardTop}><span>VIES / 意大利保险保函</span><Wallet size={23} strokeWidth={1.5}/></div>
-            <h3>为意大利市场做准备，<br/>也为周转资金留空间。</h3>
-            <p className={m.cardBody}>符合条件的企业可通过保险保函满足担保要求，减少直接提供全额保证金带来的现金占用。</p>
-            <div className={m.guaranteeVisual}><div><span>担保额度最低要求</span><strong>€50,000</strong></div><div><b>36<span>个月</span></b><span>最低担保期限</span></div></div>
-            <ul className={m.featureList}><li><Check/>核实企业适用条件，协助申请与资料递交</li><li><Check/>提前说清保费、担保安排及追偿责任</li></ul>
-            <p className={m.cardNote}>适用于符合意大利相关规定的非欧盟／非欧洲经济区企业。保函不免除纳税义务；保险公司履约垫付后，可依协议追偿。</p>
-            <button className={m.cardLink} onClick={() => onProduct("VIES")}>咨询企业适用条件 <ArrowUpRight size={19}/></button>
-          </article>
         </div>
         <p className={m.sectionNote}>产品介绍用于了解保障方向。承保主体、费用、责任范围、免赔与除外责任，以核保结果、正式保单及服务协议为准。</p>
       </div>

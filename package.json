@@ -14,7 +14,8 @@
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "drizzle-kit generate",
     "assets:optimize": "node assets/3d/optimize-world.mjs",
-    "test:scene": "node --test tests/scene-loading.test.mjs"
+    "test:scene": "node --test tests/scene-loading.test.mjs",
+    "test:intake": "node --test tests/intake-workbook.test.mjs"
   },
   "dependencies": {
     "drizzle-orm": "0.45.2",

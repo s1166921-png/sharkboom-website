@@ -208,3 +208,7 @@
   .radarVisual{flex-wrap:wrap;gap:8px}
   .radarVisual p{max-width:240px}
 }
+
+.card>[data-product-actions]{padding-bottom:25px}
+.card .cardLink{margin-top:auto}
+@media(max-width:760px){.card>[data-product-actions]{padding-bottom:22px}}
