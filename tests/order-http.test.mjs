@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {mkdtempSync,rmSync} from 'node:fs';
 import path from 'node:path';
 import {tmpdir} from 'node:os';
-import {randomBytes} from 'node:crypto';
+import {randomBytes,generateKeyPairSync} from 'node:crypto';
 
 test('HTTP authorization protects customer data, CSRF, and admin password lifecycle',async t=>{
   const {createApp}=await import('../server/app.mjs');
@@ -33,3 +33,23 @@ test('HTTP authorization protects customer data, CSRF, and admin password lifecy
 });
 
 test('repeated bad logins are rate limited and never return different account errors',async t=>{const {createApp}=await import('../server/app.mjs');const app=await createApp({dbFile:':memory:',dataKey:randomBytes(32),origin:'http://127.0.0.1',secureCookies:false,adminUsername:'admin',bootstrapPassword:'Initial-secure-password-123!',merchants:[]});await new Promise(r=>app.server.listen(0,'127.0.0.1',r));t.after(async()=>{await new Promise(r=>app.server.close(r));app.store.close();});const base=`http://127.0.0.1:${app.server.address().port}`;let status;for(let i=0;i<7;i++){const r=await fetch(base+'/api/admin/login',{method:'POST',headers:{Origin:'http://127.0.0.1','Content-Type':'application/json'},body:JSON.stringify({username:'wrong',password:'wrong'})});status=r.status;}assert.equal(status,429);});
+
+test('unsupported Alipay mobile payment is rejected before recording a pending transaction',async t=>{
+  const {createApp}=await import('../server/app.mjs');
+  const keys=generateKeyPairSync('rsa',{modulusLength:2048,privateKeyEncoding:{type:'pkcs8',format:'pem'},publicKeyEncoding:{type:'spki',format:'pem'}});
+  const app=await createApp({dbFile:':memory:',dataKey:randomBytes(32),origin:'http://127.0.0.1',secureCookies:false,adminUsername:'admin',bootstrapPassword:'Initial-secure-password-123!',merchants:[{id:'service',name:'测试主体',kinds:['service'],alipay:{enabled:true,products:['page'],appId:'APP1',sellerId:'SELLER1',privateKey:keys.privateKey,alipayPublicKey:keys.publicKey}}]});
+  await new Promise(r=>app.server.listen(0,'127.0.0.1',r));
+  t.after(async()=>{await new Promise(r=>app.server.close(r));app.store.close();});
+  const created=app.store.create({product:'VIES',fields:{companyName:'测试公司',contactName:'测试',phone:'13800138000'},consent:true});
+  const quoted=app.store.quote(created.id,{expectedVersion:0,expiresAt:new Date(Date.now()+86400000).toISOString(),terms:'人工核保测试',items:[{kind:'service',title:'服务费',amount:100,recipientId:'service',recipientName:'测试主体'}]},'test');
+  app.store.accept(created.id,1);
+  const base=`http://127.0.0.1:${app.server.address().port}`;
+  const request={itemId:quoted.quote.items[0].id,provider:'alipay',mobile:true};
+  const response=await fetch(base+'/api/orders/'+created.id+'/pay',{method:'POST',headers:{Origin:'http://127.0.0.1','Content-Type':'application/json',Authorization:'Bearer '+created.token},body:JSON.stringify(request)});
+  assert.equal(response.status,503);
+  assert.equal(app.store.get(created.id).payments.length,0);
+  const desktop=await fetch(base+'/api/orders/'+created.id+'/pay',{method:'POST',headers:{Origin:'http://127.0.0.1','Content-Type':'application/json',Authorization:'Bearer '+created.token},body:JSON.stringify({...request,mobile:false})});
+  assert.equal(desktop.status,200);
+  assert.equal(new URL((await desktop.json()).url).searchParams.get('method'),'alipay.trade.page.pay');
+  assert.equal(app.store.get(created.id).payments.length,1);
+});

@@ -47,7 +47,7 @@ export async function createApp(config){
       if(match){const [,id,action]=match;customer(req,id);if(!action&&method==='GET')return send(res,200,customerView(store.get(id)));requireThat(method==='POST','请求方法不支持',405);
         if(action==='accept')return send(res,200,customerView(store.accept(id,input.version)));
         if(action==='fields')return send(res,200,customerView(store.updateFields(id,input.fields)));
-        if(action==='pay'){security.limit('pay:'+id,30,3600);const o=store.get(id);payments.ensureAvailable(o,input.itemId,input.provider);const p=store.payment(id,input.itemId,input.provider);return send(res,200,await payments.checkout(p,o,!!input.mobile));}
+        if(action==='pay'){security.limit('pay:'+id,30,3600);const o=store.get(id);payments.ensureAvailable(o,input.itemId,input.provider,!!input.mobile);const p=store.payment(id,input.itemId,input.provider);return send(res,200,await payments.checkout(p,o,!!input.mobile));}
         if(action==='query'){const p=store.findPayment(input.paymentId);requireThat(p.orderId===id,'支付单不存在',404);security.limit('query:'+p.id,10,60);await payments.query(p);return send(res,200,customerView(store.get(id)));}
       }
       const assets={'/admin':'index.html','/admin/':'index.html','/orders':'index.html','/orders/':'index.html','/portal/app.js':'app.js','/portal/styles.css':'styles.css'};

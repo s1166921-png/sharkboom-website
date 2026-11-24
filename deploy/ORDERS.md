@@ -34,7 +34,7 @@
 
 微信直连 Native：`wechat.enabled`、`appId`、`mchId`、`serialNo`、商户 `privateKey`、32 字节 `apiV3Key`，以及 `publicKeys: {"平台证书序列号或 PUB_KEY_ID": "验签公钥 PEM"}`。必须来自商户平台，支持保留多把公钥以便轮换。商户行业、收款授权和 AppID 绑定需由业务主体确认。
 
-支付宝直连网站支付：`alipay.enabled`、`appId`、`sellerId`、应用 `privateKey`、`alipayPublicKey`、`keyType: "PKCS8"`。当前使用普通公钥 RSA2 模式；若商户应用为证书模式需扩展证书配置后启用。手机网站支付须另有相应产品权限。
+支付宝直连网站支付：`alipay.enabled`、`appId`、`sellerId`、应用 `privateKey`、`alipayPublicKey`、`keyType: "PKCS8"`。当前使用普通公钥 RSA2 模式；若商户应用为证书模式需扩展证书配置后启用。必须按商户已签约且生效的产品明确填写 `products`：电脑网站支付为 `["page"]`、手机网站支付为 `["wap"]`，两者均已开通才填写 `["page", "wap"]`。缺失或空数组不提供新的支付宝支付入口；后台仍可核验既有支付单。客户端按设备展示相应入口，服务端在创建支付单前再次核查，不能靠修改前端绕过产品权限。请勿仅凭企业固定收款码推定已开通网站支付。
 
 全部密钥仅配置到服务器私有文件，严禁填进前端、仓库、客户表单或公开消息。开发阶段可用自生成密码学夹具测试，不能把模拟支付当作生产收款。
 

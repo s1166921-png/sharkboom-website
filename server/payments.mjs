@@ -19,11 +19,13 @@ export class Payments {
     for(const m of this.merchants){requireThat(/^[a-zA-Z0-9_-]{1,64}$/.test(m.id)&&m.name&&Array.isArray(m.kinds),'收款主体配置无效',500);if(this.ready(m,'alipay'))this.alipay.set(m.id,new AlipaySdk({appId:m.alipay.appId,privateKey:m.alipay.privateKey,alipayPublicKey:m.alipay.alipayPublicKey,keyType:m.alipay.keyType||'PKCS8',signType:'RSA2',camelcase:false,timeout:10000}));}
   }
   ready(m,provider){const c=m?.[provider];if(!c?.enabled)return false;if(provider==='wechat')return !!(c.appId&&c.mchId&&c.serialNo&&c.privateKey&&c.apiV3Key?.length===32&&Object.keys(c.publicKeys||{}).length);return !!(c.appId&&c.sellerId&&c.privateKey&&c.alipayPublicKey);}
+  alipayProducts(m){return ['page','wap'].filter(p=>Array.isArray(m?.alipay?.products)&&m.alipay.products.includes(p));}
+  available(m,provider,mobile){return this.ready(m,provider)&&(provider!=='alipay'||(mobile===undefined?this.alipayProducts(m).length>0:this.alipayProducts(m).includes(mobile?'wap':'page')));}
   merchant(id){return this.merchants.find(m=>m.id===id);}
-  publicConfig(){return this.merchants.map(m=>({id:m.id,name:m.name,kinds:m.kinds,providers:['wechat','alipay'].filter(p=>this.ready(m,p))}));}
+  publicConfig(){return this.merchants.map(m=>({id:m.id,name:m.name,kinds:m.kinds,providers:['wechat','alipay'].filter(p=>this.available(m,p)),alipayProducts:this.alipayProducts(m)}));}
   validateQuoteRecipients(items){if(!Array.isArray(items))return;for(const item of items){const m=this.merchant(item.recipientId);if(m)requireThat(m.name===item.recipientName&&m.kinds.includes(item.kind),'报价收款主体或费用类型与配置不符');else requireThat(this.merchants.length===0,'请使用已配置的收款主体');}}
-  options(o){return (o.quote?.items||[]).map(item=>{const m=this.merchant(item.recipientId);const matched=m&&m.name===item.recipientName&&m.kinds.includes(item.kind);return {itemId:item.id,providers:matched?['wechat','alipay'].filter(p=>this.ready(m,p)):[]};});}
-  ensureAvailable(o,itemId,provider){const option=this.options(o).find(x=>x.itemId===itemId);requireThat(option?.providers.includes(provider),'官方收款通道尚未开通，请联系顾问；请勿向个人账户支付',503);}
+  options(o,mobile){return (o.quote?.items||[]).map(item=>{const m=this.merchant(item.recipientId);const matched=m&&m.name===item.recipientName&&m.kinds.includes(item.kind);return {itemId:item.id,providers:matched?['wechat','alipay'].filter(p=>this.available(m,p,mobile)):[],alipayProducts:matched?this.alipayProducts(m):[]};});}
+  ensureAvailable(o,itemId,provider,mobile){const option=this.options(o,mobile).find(x=>x.itemId===itemId);requireThat(option?.providers.includes(provider),'当前设备的官方收款通道尚未开通，请联系顾问；请勿向个人账户支付',503);}
   async wx(m,method,path,input){
     const c=m.wechat;const timestamp=String(Math.floor(Date.now()/1000)),nonce=randomBytes(16).toString('hex'),raw=input?JSON.stringify(input):'';
     const signature=sign('RSA-SHA256',Buffer.from(`${method}\n${path}\n${timestamp}\n${nonce}\n${raw}\n`),c.privateKey).toString('base64');
@@ -31,12 +33,12 @@ export class Payments {
     const body=await response.text();verifyWechat(Object.fromEntries(response.headers),body,c.publicKeys);const data=body?JSON.parse(body):{};if(!response.ok){const error=new AppError('微信支付暂未受理，请稍后重试或联系顾问',503);error.providerCode=data.code;throw error;}return data;
   }
   async checkout(p,o,mobile){
-    this.ensureAvailable(o,p.itemId,p.provider);if(this.checkouts.has(p.id))return this.checkouts.get(p.id);
+    this.ensureAvailable(o,p.itemId,p.provider,mobile);const cacheKey=p.id+':'+(mobile?'mobile':'desktop');if(this.checkouts.has(cacheKey))return this.checkouts.get(cacheKey);
     const work=(async()=>{const m=this.merchant(p.recipientId);const item=o.quote.items.find(i=>i.id===p.itemId);const subject=`鲨保保-${o.product}-${item.title}`.slice(0,100);const expiry=new Date(Math.min(Date.parse(p.createdAt)+30*60000,Date.parse(o.quote.expiresAt)));requireThat(expiry.getTime()>Date.now()+1000,'支付单已过期，请联系顾问核查并关闭后重新支付');
       if(p.provider==='wechat'){const result=await this.wx(m,'POST','/v3/pay/transactions/native',{appid:m.wechat.appId,mchid:m.wechat.mchId,description:subject,out_trade_no:p.id,time_expire:expiry.toISOString(),notify_url:`${this.config.origin}/api/payments/wechat/${m.id}`,amount:{total:p.amount,currency:'CNY'}});requireThat(typeof result.code_url==='string'&&result.code_url.startsWith('weixin://wxpay/'),'微信收银台地址无效',503);return {paymentId:p.id,provider:'wechat',qr:await QRCode.toDataURL(result.code_url,{width:320,margin:3,errorCorrectionLevel:'M'}),expiresAt:expiry.toISOString()};}
       const url=this.alipay.get(m.id).pageExecute(mobile?'alipay.trade.wap.pay':'alipay.trade.page.pay','GET',{bizContent:{out_trade_no:p.id,product_code:mobile?'QUICK_WAP_WAY':'FAST_INSTANT_TRADE_PAY',subject,total_amount:(p.amount/100).toFixed(2),time_expire:beijingDate(expiry)},notifyUrl:`${this.config.origin}/api/payments/alipay/${m.id}`});
       requireThat(new URL(url).origin==='https://openapi.alipay.com','支付宝收银台地址无效',503);return {paymentId:p.id,provider:'alipay',url,expiresAt:expiry.toISOString()};})();
-    this.checkouts.set(p.id,work);const expiryTimer=setTimeout(()=>this.checkouts.delete(p.id),60000);expiryTimer.unref();try{return await work;}catch(error){this.checkouts.delete(p.id);if(error instanceof AppError)throw error;throw new AppError('支付渠道暂时不可用，请稍后重试',503);}
+    this.checkouts.set(cacheKey,work);const expiryTimer=setTimeout(()=>this.checkouts.delete(cacheKey),60000);expiryTimer.unref();try{return await work;}catch(error){this.checkouts.delete(cacheKey);if(error instanceof AppError)throw error;throw new AppError('支付渠道暂时不可用，请稍后重试',503);}
   }
   verifyBusiness(p,m,provider,result){
     requireThat(p.provider===provider&&p.recipientId===m.id,'支付渠道或商户不匹配',401);
